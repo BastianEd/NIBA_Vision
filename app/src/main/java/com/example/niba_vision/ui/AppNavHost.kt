@@ -5,7 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.niba_vision.navigation.Route
-import com.example.niba_vision.ui.screen.*
+import com.example.niba_vision.ui.screen.* // Asegúrate de que este import cubra todas tus pantallas
+import com.example.niba_vision.ui.screens.*
 
 @Composable
 fun AppNavHost(nav: NavHostController) {
@@ -32,6 +33,8 @@ fun AppNavHost(nav: NavHostController) {
             )
         }
         composable(Route.Recover.route) { RecoverScreen(onBack = { nav.popBackStack() }) }
-        composable(Route.Home.route) { HomeScreen() }
+
+        // MODIFICACIÓN DE LA GUÍA 9: La ruta Home ahora llama a la pantalla adaptativa
+        composable(Route.Home.route) { HomeAdaptiveScreen() }
     }
 }
