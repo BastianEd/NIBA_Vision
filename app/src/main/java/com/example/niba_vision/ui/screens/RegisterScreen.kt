@@ -1,4 +1,4 @@
-package com.example.niba_vision.ui.screen
+package com.example.niba_vision.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

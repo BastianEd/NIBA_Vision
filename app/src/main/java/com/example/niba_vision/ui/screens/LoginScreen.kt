@@ -1,4 +1,4 @@
-package com.example.niba_vision.ui.screen
+package com.example.niba_vision.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -10,6 +10,16 @@ import androidx.compose.ui.unit.dp
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.util.Validators
 
+/**
+ * Composable que representa la pantalla de inicio de sesión.
+ *
+ * Permite a los usuarios ingresar sus credenciales (correo y contraseña) para acceder a la app.
+ * También ofrece opciones para navegar a las pantallas de registro y recuperación de contraseña.
+ *
+ * @param onRegister Lambda que se invoca cuando el usuario presiona "Crear cuenta".
+ * @param onRecover Lambda que se invoca cuando el usuario presiona "¿Olvidaste tu contraseña?".
+ * @param onLoggedIn Lambda que se invoca tras una autenticación exitosa.
+ */
 @Composable
 fun LoginScreen(
     onRegister: () -> Unit,
