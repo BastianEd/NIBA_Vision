@@ -14,6 +14,12 @@ import androidx.compose.ui.unit.dp
 import com.example.niba_vision.R
 import com.example.niba_vision.view.theme.NIBA_VisionTheme
 
+/**
+ * Representa la pantalla de inicio para dispositivos con ancho expandido (ej. tablets grandes).
+ *
+ * Utiliza un diseño de tipo "Master-Detail" con un panel de navegación lateral fijo
+ * y un área de contenido principal, ideal para pantallas anchas.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenExpandida() {
@@ -72,6 +78,9 @@ fun HomeScreenExpandida() {
     }
 }
 
+/**
+ * Previsualización para el diseño expandido en Android Studio.
+ */
 @Preview(name = "Expanded (1000dp)", widthDp = 1000, heightDp = 900)
 @Composable
 fun PreviewExpandida() {

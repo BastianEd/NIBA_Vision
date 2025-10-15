@@ -13,6 +13,12 @@ import androidx.compose.ui.unit.dp
 import com.example.niba_vision.R
 import com.example.niba_vision.view.theme.NIBA_VisionTheme
 
+/**
+ * Representa la pantalla de inicio para dispositivos con ancho compacto (ej. teléfonos).
+ *
+ * El diseño es vertical, apilando los elementos uno encima del otro para
+ * un mejor aprovechamiento del espacio en pantallas estrechas.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenCompacta() {
@@ -50,6 +56,9 @@ fun HomeScreenCompacta() {
     }
 }
 
+/**
+ * Previsualización para el diseño compacto en Android Studio.
+ */
 @Preview(name = "Compact (360dp)", widthDp = 360, heightDp = 800)
 @Composable
 fun PreviewCompact() {

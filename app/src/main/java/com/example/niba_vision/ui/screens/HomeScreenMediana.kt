@@ -13,6 +13,12 @@ import androidx.compose.ui.unit.dp
 import com.example.niba_vision.R
 import com.example.niba_vision.view.theme.NIBA_VisionTheme
 
+/**
+ * Representa la pantalla de inicio para dispositivos con ancho mediano (ej. tablets pequeñas).
+ *
+ * El diseño es horizontal, colocando la imagen y el texto lado a lado para
+ * aprovechar el espacio adicional sin llegar a necesitar un panel lateral completo.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenMediana() {
@@ -53,6 +59,9 @@ fun HomeScreenMediana() {
     }
 }
 
+/**
+ * Previsualización para el diseño mediano en Android Studio.
+ */
 @Preview(name = "Medium (600dp)", widthDp = 600, heightDp = 900)
 @Composable
 fun PreviewMediana() {

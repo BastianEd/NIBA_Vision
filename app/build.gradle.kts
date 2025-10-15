@@ -1,26 +1,29 @@
+// Define los plugins necesarios para una aplicación Android con Kotlin y Compose.
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    // Puedes mantener el compose plugin si lo quieres
     alias(libs.plugins.kotlin.compose)
 }
 
+// Configuración específica del módulo de la aplicación Android.
 android {
     namespace = "com.example.niba_vision"
-    compileSdk = 36
+    compileSdk = 36 // La versión del SDK contra la que se compila el proyecto.
 
     defaultConfig {
         applicationId = "com.example.niba_vision"
-        minSdk = 28
-        targetSdk = 36
+        minSdk = 28 // La versión mínima de Android requerida para ejecutar la app.
+        targetSdk = 36 // La versión de Android para la que la app fue probada.
         versionCode = 1
         versionName = "1.0"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Configuración para las compilaciones de lanzamiento (release).
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = false // Desactiva la ofuscación de código.
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -28,7 +31,7 @@ android {
         }
     }
 
-    // Mantengo Java/Kotlin 11 como pediste
+    // Opciones de compilación para Java y Kotlin.
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -37,44 +40,43 @@ android {
         jvmTarget = "11"
     }
 
+    // Habilita el uso de Jetpack Compose.
     buildFeatures { compose = true }
 
-    // Si usas el plugin kotlin.compose, puedes omitir esta línea.
-    // Si la quieres dejar, que sea coherente con el BOM que uses.
+    // Opciones específicas del compilador de Compose.
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
 }
 
+// Lista de dependencias del proyecto.
 dependencies {
-    // ===== Compose BOM (centraliza versiones) =====
+    // ===== Compose BOM (Bill of Materials) =====
+    // Centraliza las versiones de las librerías de Compose para asegurar la compatibilidad.
     implementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(platform(libs.androidx.compose.bom))
 
-    // ===== Compose UI / Material 3 (sin versiones fijas) =====
+    // ===== Dependencias de Jetpack Compose =====
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3) // Material Design 3.
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
 
-    // ===== Navigation + Lifecycle para Compose =====
+    // ===== Dependencias de Navegación y Ciclo de Vida =====
     implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation("androidx.navigation:navigation-compose:2.8.3") // Navegación en Compose.
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0-rc02")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
 
-    // ===== Core / runtime =====
+    // ===== Core de AndroidX y Kotlin =====
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // ===== Testing =====
+    // ===== Dependencias de Testing =====
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

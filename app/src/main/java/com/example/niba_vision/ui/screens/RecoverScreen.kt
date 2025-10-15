@@ -9,8 +9,18 @@ import androidx.compose.ui.unit.dp
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.util.Validators
 
+/**
+ * Pantalla para la recuperación de contraseña.
+ *
+ * El usuario ingresa su correo electrónico para simular el envío de instrucciones
+ * de recuperación. Por razones de seguridad y privacidad, siempre muestra un mensaje
+ * genérico, sin confirmar si el correo existe o no en el sistema.
+ *
+ * @param onBack Lambda para volver a la pantalla anterior.
+ */
 @Composable
 fun RecoverScreen(onBack: () -> Unit) {
+    // Estado para el correo y el mensaje de confirmación.
     var email by remember { mutableStateOf("") }
     val emailErr = Validators.validateEmail(email)
     var message by remember { mutableStateOf<String?>(null) }
@@ -24,6 +34,7 @@ fun RecoverScreen(onBack: () -> Unit) {
         ) {
             Text("Recuperar contraseña", style = MaterialTheme.typography.headlineSmall)
 
+            // Campo de texto para el correo.
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -34,18 +45,20 @@ fun RecoverScreen(onBack: () -> Unit) {
             )
             if (emailErr != null) Text(emailErr, color = MaterialTheme.colorScheme.error)
 
+            // Muestra el mensaje de simulación.
             if (message != null) Text(message!!)
 
+            // Botón para solicitar la recuperación.
             Button(
                 onClick = {
-                    // Simulación: siempre mostramos el mismo mensaje por privacidad
-                    val exist = UserRepository.exists(email.trim())
+                    // Simulación: No se confirma si el correo existe.
                     message = "Si el correo existe, enviaremos instrucciones a $email."
                 },
                 enabled = emailErr == null,
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Enviar instrucciones") }
 
+            // Botón para volver.
             TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) {
                 Text("Volver")
             }

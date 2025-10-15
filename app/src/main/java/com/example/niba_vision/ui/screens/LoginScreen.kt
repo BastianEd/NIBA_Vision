@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.niba_vision.data.UserRepository
@@ -26,14 +27,17 @@ fun LoginScreen(
     onRecover: () -> Unit,
     onLoggedIn: () -> Unit
 ) {
+    // Estados para almacenar el email, la contraseña y los mensajes de error.
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // Validación en tiempo real de los campos.
     val emailError = Validators.validateEmail(email)
     val passError = if (pass.isBlank()) "La contraseña no puede estar vacía." else null
-    val valid = emailError == null && passError == null
+    val valid = email.isNotBlank() && pass.isNotBlank() && emailError == null
 
+    // Contenedor principal centrado.
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             Modifier
@@ -44,29 +48,33 @@ fun LoginScreen(
             Text("ZONALIBROS", style = MaterialTheme.typography.headlineMedium)
             Text("Inicio de sesión", style = MaterialTheme.typography.titleMedium)
 
+            // Campo de texto para el correo.
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Correo @duoc.cl") },
                 singleLine = true,
-                isError = emailError != null,
+                isError = emailError != null && email.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
-            if (emailError != null) Text(emailError, color = MaterialTheme.colorScheme.error)
+            if (emailError != null && email.isNotBlank()) Text(emailError, color = MaterialTheme.colorScheme.error)
 
+            // Campo de texto para la contraseña.
             OutlinedTextField(
                 value = pass,
                 onValueChange = { pass = it },
                 label = { Text("Contraseña") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                isError = passError != null,
+                isError = pass.isBlank() && email.isNotBlank(), // Muestra error en pass si está vacío y ya se empezó a escribir en email
                 modifier = Modifier.fillMaxWidth()
             )
-            if (passError != null) Text(passError, color = MaterialTheme.colorScheme.error)
+            if (passError != null && pass.isBlank() && email.isNotBlank()) Text(passError, color = MaterialTheme.colorScheme.error)
 
+            // Muestra el error de inicio de sesión.
             if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error)
 
+            // Botón para intentar el inicio de sesión.
             Button(
                 onClick = {
                     val res = UserRepository.login(email.trim(), pass)
@@ -74,9 +82,21 @@ fun LoginScreen(
                     else error = res.exceptionOrNull()?.message
                 },
                 enabled = valid,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                // --- ¡AQUÍ ESTÁ LA SOLUCIÓN! ---
+                colors = ButtonDefaults.buttonColors(
+                    // Color de fondo cuando el botón está HABILITADO
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    // Color de fondo cuando el botón está DESHABILITADO
+                    disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                    // Color del texto cuando el botón está HABILITADO
+                    contentColor = Color.White,
+                    // Color del texto cuando el botón está DESHABILITADO
+                    disabledContentColor = Color.White.copy(alpha = 0.7f)
+                )
             ) { Text("Ingresar") }
 
+            // Botones para navegar a registro y recuperación.
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
