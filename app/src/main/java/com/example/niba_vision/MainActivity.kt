@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
 import com.example.niba_vision.ui.AppNavHost
-import com.example.niba_vision.view.theme.NIBA_VisionTheme
+import com.example.niba_vision.ui.theme.NIBA_VisionTheme
 
 /**
  * Actividad principal y punto de entrada de la aplicación.

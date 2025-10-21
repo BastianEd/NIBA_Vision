@@ -9,6 +9,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.niba_vision.viewmodel.LoginViewModel
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun LoginScreen(
@@ -26,7 +27,7 @@ fun LoginScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center, ) {
         Column(
             Modifier
                 .fillMaxWidth(0.9f)
@@ -62,7 +63,17 @@ fun LoginScreen(
             Button(
                 onClick = { loginViewModel.login() },
                 enabled = uiState.emailError == null && uiState.passError == null && uiState.email.isNotBlank() && uiState.pass.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    // Color de fondo cuando el botón está HABILITADO
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    // Color del texto cuando el botón está HABILITADO
+                    contentColor = Color.White,
+                    // Color de fondo cuando el botón está DESHABILITADO
+                    disabledContainerColor = Color.DarkGray,
+                    // Color del texto cuando el botón está DESHABILITADO
+                    disabledContentColor = Color.White
+                )
             ) { Text("Ingresar") }
 
             Row(

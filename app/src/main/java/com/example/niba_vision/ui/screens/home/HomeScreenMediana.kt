@@ -11,7 +11,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.niba_vision.R
-import com.example.niba_vision.view.theme.NIBA_VisionTheme
+import com.example.niba_vision.ui.theme.NIBA_VisionTheme
 
 /**
  * Representa la pantalla de inicio para dispositivos con ancho mediano (ej. tablets pequeñas).
