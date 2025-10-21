@@ -1,0 +1,47 @@
+package com.example.niba_vision.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.niba_vision.data.UserRepository
+import com.example.niba_vision.util.Validators
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+// Data class para representar el estado de la UI
+data class LoginUiState(
+    val email: String = "",
+    val pass: String = "",
+    val emailError: String? = null,
+    val passError: String? = null,
+    val loginError: String? = null,
+    val isLoginSuccess: Boolean = false
+)
+
+class LoginViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    fun onEmailChange(email: String) {
+        _uiState.update { it.copy(email = email, emailError = Validators.validateEmail(email)) }
+    }
+
+    fun onPasswordChange(pass: String) {
+        val passError = if (pass.isBlank()) "La contraseña no puede estar vacía." else null
+        _uiState.update { it.copy(pass = pass, passError = passError) }
+    }
+
+    fun login() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val result = UserRepository.login(state.email.trim(), state.pass)
+            if (result.isSuccess) {
+                _uiState.update { it.copy(isLoginSuccess = true, loginError = null) }
+            } else {
+                _uiState.update { it.copy(loginError = result.exceptionOrNull()?.message) }
+            }
+        }
+    }
+}

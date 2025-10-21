@@ -1,4 +1,4 @@
-package com.example.niba_vision.ui.screens
+package com.example.niba_vision.ui.screens.home
 
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
