@@ -1,5 +1,7 @@
 # Proyecto: ZONALIBROS - Aplicación Android Nativa con Arquitectura MVVM
 
+![Captura de pantalla de la aplicacion](https://i.ibb.co/Ld0RZ2rn/Portada-Aplicacion.png)
+
 ## Descripción del Proyecto
 
 Como desarrollador, he construido esta aplicación nativa para Android como parte de mi formación en Desarrollo de Aplicaciones Móviles. El proyecto, denominado **ZONALIBROS**, implementa un sistema completo de autenticación de usuarios y una interfaz de usuario adaptativa, utilizando las tecnologías más modernas del ecosistema Android.
