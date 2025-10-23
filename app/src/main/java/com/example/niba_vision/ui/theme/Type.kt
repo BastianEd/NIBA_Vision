@@ -6,29 +6,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+// ✍️ Aquí definimos la tipografía base de la app NIBA Vision.
+// Esto controla cómo se ven los textos: tamaño, grosor, espacio entre líneas, etc.
+
+// 📚 Typography es una clase que agrupa todos los estilos de texto del sistema Material Design 3.
+// Podemos personalizar títulos, subtítulos, párrafos, botones, etc.
 val Typography = Typography(
+    // 🧾 "bodyLarge" es el estilo de texto principal o base del contenido.
+    // Se usa en la mayoría de los textos comunes, como párrafos o descripciones.
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
+        fontFamily = FontFamily.Default,    // 👉 Aquí usamos la fuente predeterminada del sistema.
+        fontWeight = FontWeight.Normal,     // 👉 Peso normal (ni negrita ni delgada).
+        fontSize = 16.sp,                   // 👉 Tamaño del texto: 16 "scale pixels", ideal para leer cómodo.
+        lineHeight = 24.sp,                 // 👉 Altura de línea: deja espacio vertical entre líneas de texto.
+        letterSpacing = 0.5.sp              // 👉 Espaciado entre letras, mejora la legibilidad.
     )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
 )

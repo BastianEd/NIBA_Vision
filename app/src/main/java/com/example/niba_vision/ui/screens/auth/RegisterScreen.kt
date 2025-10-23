@@ -13,30 +13,38 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.niba_vision.data.Genre
 import com.example.niba_vision.viewmodel.RegisterViewModel
 
+// 🧾 Pantalla de registro de nuevos usuarios.
+// Aquí el usuario ingresa su nombre, correo, contraseña, teléfono y géneros favoritos.
 @Composable
 fun RegisterScreen(
-    onBack: () -> Unit,
-    onRegistered: () -> Unit,
-    registerViewModel: RegisterViewModel = viewModel()
+    onBack: () -> Unit,                 // 👉 Acción para volver al login.
+    onRegistered: () -> Unit,           // 👉 Acción que se ejecuta cuando el registro fue exitoso.
+    registerViewModel: RegisterViewModel = viewModel() // 👉 ViewModel que maneja los datos y validaciones.
 ) {
+    // 📡 Observamos el estado de la pantalla (nombre, correo, errores, etc.)
     val uiState by registerViewModel.uiState.collectAsState()
+    // 🎵 Lista de géneros (tomada del enum Genre).
     val genreOptions = Genre.entries
 
+    // 🚀 Si el registro fue exitoso, navegamos automáticamente de vuelta al login.
     LaunchedEffect(uiState.isRegistrationSuccess) {
         if (uiState.isRegistrationSuccess) {
             onRegistered()
         }
     }
 
+    // 🧱 Columna principal que contienetodo el formulario.
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()) // 👉 Permite desplazarse si hay muchos campos.
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp) // 👉 Espacio uniforme entre elementos.
     ) {
+        // 🏷️ Título de la pantalla.
         Text("Registro", style = MaterialTheme.typography.headlineMedium)
 
+        // 👤 Campo: Nombre completo del usuario.
         OutlinedTextField(
             value = uiState.fullName,
             onValueChange = { registerViewModel.onFullNameChange(it) },
@@ -44,8 +52,10 @@ fun RegisterScreen(
             isError = uiState.nameError != null,
             modifier = Modifier.fillMaxWidth()
         )
-        if (uiState.nameError != null) Text(uiState.nameError!!, color = MaterialTheme.colorScheme.error)
+        if (uiState.nameError != null)
+            Text(uiState.nameError!!, color = MaterialTheme.colorScheme.error)
 
+        // 📧 Campo: Correo institucional.
         OutlinedTextField(
             value = uiState.email,
             onValueChange = { registerViewModel.onEmailChange(it) },
@@ -54,19 +64,23 @@ fun RegisterScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (uiState.emailError != null) Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error)
+        if (uiState.emailError != null)
+            Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error)
 
+        // 🔒 Campo: Contraseña (oculta con puntitos).
         OutlinedTextField(
             value = uiState.pass,
             onValueChange = { registerViewModel.onPasswordChange(it) },
             label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = PasswordVisualTransformation(), // 👉 Oculta los caracteres.
             isError = uiState.passError != null,
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (uiState.passError != null) Text(uiState.passError!!, color = MaterialTheme.colorScheme.error)
+        if (uiState.passError != null)
+            Text(uiState.passError!!, color = MaterialTheme.colorScheme.error)
 
+        // ✅ Campo: Confirmar contraseña (también oculta).
         OutlinedTextField(
             value = uiState.confirmPass,
             onValueChange = { registerViewModel.onConfirmPasswordChange(it) },
@@ -76,8 +90,10 @@ fun RegisterScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (uiState.confirmPassError != null) Text(uiState.confirmPassError!!, color = MaterialTheme.colorScheme.error)
+        if (uiState.confirmPassError != null)
+            Text(uiState.confirmPassError!!, color = MaterialTheme.colorScheme.error)
 
+        // ☎️ Campo: Teléfono (opcional).
         OutlinedTextField(
             value = uiState.phone,
             onValueChange = { registerViewModel.onPhoneChange(it) },
@@ -86,29 +102,49 @@ fun RegisterScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (uiState.phoneError != null) Text(uiState.phoneError!!, color = MaterialTheme.colorScheme.error)
+        if (uiState.phoneError != null)
+            Text(uiState.phoneError!!, color = MaterialTheme.colorScheme.error)
 
-        Text("Géneros favoritos (selecciona al menos uno):", style = MaterialTheme.typography.titleMedium)
+        // 🎶 Sección: Géneros favoritos del usuario.
+        Text(
+            "Géneros favoritos (selecciona al menos uno):",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        // ✅ Por cada género, mostramos una fila con checkbox + texto.
         genreOptions.forEachIndexed { index, genre ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
-                    checked = uiState.checkedGenres[index],
-                    onCheckedChange = { isChecked -> registerViewModel.onGenreCheckedChange(index, isChecked) }
+                    checked = uiState.checkedGenres[index], // 👉 Muestra si está marcado.
+                    onCheckedChange = { isChecked ->
+                        registerViewModel.onGenreCheckedChange(index, isChecked) // 👉 Actualiza el ViewModel.
+                    }
                 )
+                // 👉 Mostramos el nombre del género (reemplazando "_" por espacio).
                 Text(genre.name.replace("_", " "))
             }
         }
-        if (uiState.genresError != null) Text(uiState.genresError!!, color = MaterialTheme.colorScheme.error)
+        if (uiState.genresError != null)
+            Text(uiState.genresError!!, color = MaterialTheme.colorScheme.error)
 
-        if (uiState.submitError != null) Text(uiState.submitError!!, color = MaterialTheme.colorScheme.error)
+        // ⚠️ Si hay error general de envío, lo mostramos aquí.
+        if (uiState.submitError != null)
+            Text(uiState.submitError!!, color = MaterialTheme.colorScheme.error)
 
+        // 🚀 Botón de “Crear cuenta”. Solo se habilita sitodo está validado.
         Button(
             onClick = { registerViewModel.register() },
-            enabled = uiState.allValid,
+            enabled = uiState.allValid, // 👉 El ViewModel decide si todos los campos son correctos.
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Crear cuenta") }
+        ) {
+            Text("Crear cuenta")
+        }
 
-        TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+        // 🔙 Botón “Volver” centrado, para regresar al login.
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
             Text("Volver")
         }
     }
