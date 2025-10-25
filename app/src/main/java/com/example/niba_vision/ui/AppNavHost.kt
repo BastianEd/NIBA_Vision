@@ -1,69 +1,82 @@
 package com.example.niba_vision.ui
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.navigation.Route
 import com.example.niba_vision.ui.screens.auth.LoginScreen
 import com.example.niba_vision.ui.screens.auth.RecoverScreen
 import com.example.niba_vision.ui.screens.auth.RegisterScreen
 import com.example.niba_vision.ui.screens.home.HomeAdaptiveScreen
+import com.example.niba_vision.viewmodel.AppViewModelFactory
 
-// 🚀 Esta función define toda la navegación de la app NIBA Vision.
-// Aquí se controlan las pantallas (rutas) y cómo se mueve el usuario entre ellas.
+/**
+ * Composable que configura el NavHost de la aplicación y las rutas principales.
+ *
+ * - Crea una única instancia de `AppViewModelFactory` usando `userRepository` y la reutiliza
+ *   para proporcionar ViewModels que requieren acceso al repositorio.
+ * - Define las rutas de navegación y callbacks entre pantallas de autenticación y la pantalla
+ *   principal.
+ *
+ * Rutas y comportamiento:
+ * - `Route.Login.route`
+ *   - Muestra `LoginScreen` con `loginViewModel` creado por la fábrica.
+ *   - `onRegister` -> navega a `Route.Register.route`.
+ *   - `onRecover` -> navega a `Route.Recover.route`.
+ *   - `onLoggedIn` -> navega a `Route.Home.route` y elimina la pila hasta `Route.Login.route` (inclusive).
+ * - `Route.Register.route`
+ *   - Muestra `RegisterScreen` con `registerViewModel` creado por la fábrica.
+ *   - `onBack` -> vuelve atrás (`popBackStack`).
+ *   - `onRegistered` -> navega a `Route.Login.route` y limpia `Route.Login.route` de la pila (inclusive).
+ * - `Route.Recover.route`
+ *   - Muestra `RecoverScreen` con `onBack` que hace `popBackStack`.
+ * - `Route.Home.route`
+ *   - Muestra `HomeAdaptiveScreen`.
+ *
+ * @param nav Controlador de navegación usado para mover entre pantallas.
+ * @param userRepository Repositorio de usuario inyectado en los ViewModels mediante la fábrica.
+ */
+// AppNavHost ahora recibe el UserRepository para poder crear los ViewModels
 @Composable
-fun AppNavHost(nav: NavHostController) {
-
-    // 🗺️ NavHost es el "contenedor" principal de navegación.
-    // Define la primera pantalla (startDestination) y todas las rutas disponibles.
+fun AppNavHost(nav: NavHostController, userRepository: UserRepository) {
+    // Crea la fábrica una sola vez y pásala a los ViewModels que la necesiten
+    val viewModelFactory = AppViewModelFactory(userRepository)
     NavHost(navController = nav, startDestination = Route.Login.route) {
-
-        // 🔑 Pantalla de inicio de sesión (Login)
         composable(Route.Login.route) {
             LoginScreen(
-                // 👉 Si el usuario toca "Crear cuenta", lo llevamos a la pantalla de registro.
                 onRegister = { nav.navigate(Route.Register.route) },
-
-                // 👉 Si toca "¿Olvidaste tu contraseña?", va a la pantalla de recuperación.
                 onRecover = { nav.navigate(Route.Recover.route) },
-
-                // 👉 Si el login fue exitoso, lo llevamos a Home y
-                // quitamos la pantalla de Login del historial para no volver atrás.
                 onLoggedIn = {
                     nav.navigate(Route.Home.route) {
                         popUpTo(Route.Login.route) { inclusive = true }
                     }
-                }
+                },
+                // Usa la fábrica para que el ViewModel reciba el repositorio
+                loginViewModel = viewModel(factory = viewModelFactory)
             )
         }
-
-        // 📝 Pantalla de registro de nuevo usuario.
         composable(Route.Register.route) {
             RegisterScreen(
-                // 👉 Vuelve atrás si el usuario presiona “volver”.
                 onBack = { nav.popBackStack() },
-
-                // 👉 Una vez registrado, lo llevamos de vuelta al Login.
                 onRegistered = {
                     nav.navigate(Route.Login.route) {
                         popUpTo(Route.Login.route) { inclusive = true }
                     }
-                }
+                },
+                // Usa la fábrica para que el ViewModel reciba el repositorio
+                registerViewModel = viewModel(factory = viewModelFactory)
             )
         }
-
-        // 🔄 Pantalla de recuperación de contraseña.
         composable(Route.Recover.route) {
             RecoverScreen(
-                // 👉 Solo tiene opción de volver atrás.
                 onBack = { nav.popBackStack() }
             )
         }
-
-        // 🏠 Pantalla principal de la app (Home)
         composable(Route.Home.route) {
-            HomeAdaptiveScreen() // 👉 Aquí entra el usuario una vez logueado correctamente.
+            HomeAdaptiveScreen()
         }
     }
 }

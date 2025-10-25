@@ -4,7 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
+import com.example.niba_vision.data.AppDatabase
+import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.ui.AppNavHost
 import com.example.niba_vision.ui.theme.NIBA_VisionTheme
 
@@ -40,8 +44,15 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun App() {
-    // Crea y recuerda el NavController para manejar la pila de navegación.
     val nav = rememberNavController()
-    // Define el grafo de navegación, conectando rutas con sus respectivos composables.
-    AppNavHost(nav)
+    val context = LocalContext.current
+
+    // Crea una única instancia del repositorio que se recordará durante toda la vida de la app
+    val userRepository = remember {
+        val db = AppDatabase.getDatabase(context)
+        UserRepository(db.userDao())
+    }
+
+    // Pasa el repositorio al NavHost, que se encargará de distribuirlo a las pantallas
+    AppNavHost(nav = nav, userRepository = userRepository)
 }

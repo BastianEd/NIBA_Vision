@@ -20,7 +20,7 @@ data class LoginUiState(
     val isLoginSuccess: Boolean = false
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
@@ -34,9 +34,11 @@ class LoginViewModel : ViewModel() {
     }
 
     fun login() {
-        viewModelScope.launch {
+        // Usamos una corrutina para llamar a la base de datos de forma segura
+        viewModelScope.launch { // Llamar a la BD
             val state = _uiState.value
-            val result = UserRepository.login(state.email.trim(), state.pass)
+            // Nueva función 'suspend' del repositorio
+            val result = userRepository.login(state.email.trim(), state.pass)
             if (result.isSuccess) {
                 _uiState.update { it.copy(isLoginSuccess = true, loginError = null) }
             } else {

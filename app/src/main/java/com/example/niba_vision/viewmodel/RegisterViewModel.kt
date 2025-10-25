@@ -35,18 +35,29 @@ data class RegisterUiState(
                 fullName.isNotBlank() && email.isNotBlank() && pass.isNotBlank() && confirmPass.isNotBlank()
 }
 
-class RegisterViewModel : ViewModel() {
+/**
+ * ViewModel responsable de la pantalla de registro.
+ *
+ * - Mantiene el estado de la UI en un [MutableStateFlow] de [RegisterUiState].
+ * - Expone `uiState` como [StateFlow] inmutable para la vista.
+ * - Proporciona métodos para actualizar cada campo del formulario y validar
+ *   usando las utilidades de `Validators`.
+ * - Ejecuta la lógica de registro en una coroutine de `viewModelScope`:
+ *   verifica duplicados con [UserRepository.exists] y persiste el usuario con
+ *   [UserRepository.registerUserInDb].
+ *
+ * Efectos secundarios:
+ * - Llamadas a `UserRepository` (I/O) desde `register`.
+ */
+class RegisterViewModel(private val userRepository: UserRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
-
     fun onFullNameChange(name: String) {
         _uiState.update { it.copy(fullName = name, nameError = Validators.validateName(name)) }
     }
-
     fun onEmailChange(email: String) {
         _uiState.update { it.copy(email = email, emailError = Validators.validateEmail(email)) }
     }
-
     fun onPasswordChange(pass: String) {
         _uiState.update {
             it.copy(
@@ -56,7 +67,6 @@ class RegisterViewModel : ViewModel() {
             )
         }
     }
-
     fun onConfirmPasswordChange(confirmPass: String) {
         _uiState.update {
             it.copy(
@@ -65,27 +75,23 @@ class RegisterViewModel : ViewModel() {
             )
         }
     }
-
     fun onPhoneChange(phone: String) {
         _uiState.update { it.copy(phone = phone, phoneError = Validators.validatePhone(phone.ifBlank { null })) }
     }
-
     fun onGenreCheckedChange(index: Int, isChecked: Boolean) {
         val updatedGenres = _uiState.value.checkedGenres.toMutableList()
         updatedGenres[index] = isChecked
         val genresError = Validators.validateGenres(updatedGenres.count { it })
         _uiState.update { it.copy(checkedGenres = updatedGenres, genresError = genresError) }
     }
-
     fun register() {
         if (!_uiState.value.allValid) {
             _uiState.update { it.copy(submitError = "Por favor, corrige los errores.") }
             return
         }
-
         viewModelScope.launch {
             val state = _uiState.value
-            if (UserRepository.exists(state.email.trim())) {
+            if (userRepository.exists(state.email.trim())) {
                 _uiState.update { it.copy(submitError = "El correo ya está registrado.") }
             } else {
                 val selectedGenres = Genre.entries.toTypedArray().filterIndexed { index, _ -> state.checkedGenres[index] }
@@ -96,12 +102,8 @@ class RegisterViewModel : ViewModel() {
                     phone = state.phone.ifBlank { null },
                     favoriteGenres = selectedGenres
                 )
-                val result = UserRepository.register(user)
-                if (result.isSuccess) {
-                    _uiState.update { it.copy(isRegistrationSuccess = true, submitError = null) }
-                } else {
-                    _uiState.update { it.copy(submitError = result.exceptionOrNull()?.message) }
-                }
+                userRepository.registerUserInDb(user)
+                _uiState.update { it.copy(isRegistrationSuccess = true, submitError = null) }
             }
         }
     }

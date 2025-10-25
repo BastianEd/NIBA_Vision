@@ -1,51 +1,72 @@
 package com.example.niba_vision.data
 
 /**
- * Repositorio singleton para gestionar los datos de los usuarios en memoria.
+ * Repositorio para gestionar los datos de los usuarios, interactuando con la base de datos a través del DAO.
  *
- * Se encarga de operaciones como registrar, autenticar y verificar la existencia de usuarios.
- * Utiliza un `mutableMapOf` para simular una base de datos en memoria donde la clave es el
- * correo electrónico del usuario en minúsculas para evitar duplicados por mayúsculas/minúsculas.
+ * Esta clase ya no es un 'object' (Singleton), ya que ahora depende de una instancia de UserDao
+ * para realizar las operaciones de la base de datos.
+ *
+ * @property userDao El objeto de acceso a datos (DAO) para la tabla de usuarios.
  */
-object UserRepository {
-    private val usersByEmail = mutableMapOf<String, User>()
+class UserRepository(private val userDao: UserDao) {
 
     /**
-     * Registra un nuevo usuario en el sistema.
+     * Autentica a un usuario consultando la base de datos.
      *
-     * @param user El objeto [User] que se va a registrar.
-     * @return Un [Result] que será [Result.success] si el registro fue exitoso,
-     * o [Result.failure] con una [IllegalArgumentException] si el correo ya existe.
+     * @param email El correo electrónico del usuario.
+     * @param password La contraseña del usuario.
+     * @return Un [Result] que contiene el objeto [User] si las credenciales son correctas,
+     * o [Result.failure] con una excepción si son inválidas.
      */
-    fun register(user: User): Result<Unit> {
-        val key = user.email.lowercase()
-        return if (usersByEmail.containsKey(key))
-            Result.failure(IllegalArgumentException("El correo ya está registrado."))
-        else {
-            usersByEmail[key] = user
-            Result.success(Unit)
+    suspend fun login(email: String, password: String): Result<User> {
+        // Busca el usuario en la BD por su email
+        val userEntity = userDao.findUserByEmail(email)
+
+        // Comprueba si el usuario existe y la contraseña coincide
+        return if (userEntity != null && userEntity.password == password) {
+            // Si es correcto, convierte la entidad de la BD (UserEntity) a tu modelo de UI (User)
+            val user = User(
+                fullName = userEntity.fullName,
+                email = userEntity.email,
+                password = userEntity.password, // Considera no pasar la contraseña al modelo de UI por seguridad
+                phone = userEntity.phone,
+                // Convierte el String de géneros de nuevo a una List<Genre>
+                favoriteGenres = userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) }
+            )
+            Result.success(user)
+        } else {
+            // Si no, devuelve un error
+            Result.failure(IllegalArgumentException("Credenciales inválidas."))
         }
     }
 
     /**
-     * Autentica a un usuario mediante su correo y contraseña.
-     *
-     * @param email El correo electrónico del usuario.
-     * @param password La contraseña del usuario.
-     * @return Un [Result] que contiene el [User] si las credenciales son correctas,
-     * o [Result.failure] si las credenciales son inválidas.
-     */
-    fun login(email: String, password: String): Result<User> {
-        val u = usersByEmail[email.lowercase()]
-        return if (u != null && u.password == password) Result.success(u)
-        else Result.failure(IllegalArgumentException("Credenciales inválidas."))
-    }
-
-    /**
-     * Comprueba si un usuario ya existe en el repositorio.
+     * Comprueba si un correo electrónico ya está registrado en la base de datos.
      *
      * @param email El correo electrónico a verificar.
      * @return `true` si el correo ya está registrado, `false` en caso contrario.
      */
-    fun exists(email: String) = usersByEmail.containsKey(email.lowercase())
+    suspend fun exists(email: String): Boolean {
+        // El DAO se encarga de la consulta a la BD
+        return userDao.findUserByEmail(email) != null
+    }
+
+    /**
+     * Registra un nuevo usuario en la base de datos.
+     * Convierte el objeto [User] del ViewModel a un [UserEntity] antes de insertarlo.
+     *
+     * @param user El objeto [User] con los datos del nuevo usuario.
+     */
+    suspend fun registerUserInDb(user: User) {
+        val userEntity = UserEntity(
+            fullName = user.fullName,
+            email = user.email,
+            password = user.password,
+            phone = user.phone,
+            // Convierte la lista de géneros a un único String para poder guardarlo en la BD
+            favoriteGenres = user.favoriteGenres.joinToString(",") { it.name }
+        )
+        // Llama a la función del DAO para insertar el nuevo usuario
+        userDao.registerUser(userEntity)
+    }
 }
