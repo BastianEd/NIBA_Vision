@@ -41,10 +41,10 @@ data class RegisterUiState(
  * - Mantiene el estado de la UI en un [MutableStateFlow] de [RegisterUiState].
  * - Expone `uiState` como [StateFlow] inmutable para la vista.
  * - Proporciona métodos para actualizar cada campo del formulario y validar
- *   usando las utilidades de `Validators`.
+ * usando las utilidades de `Validators`.
  * - Ejecuta la lógica de registro en una coroutine de `viewModelScope`:
- *   verifica duplicados con [UserRepository.exists] y persiste el usuario con
- *   [UserRepository.registerUserInDb].
+ * verifica duplicados con [UserRepository.exists] y persiste el usuario con
+ * [UserRepository.registerUserInDb].
  *
  * Efectos secundarios:
  * - Llamadas a `UserRepository` (I/O) desde `register`.
@@ -52,6 +52,17 @@ data class RegisterUiState(
 class RegisterViewModel(private val userRepository: UserRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
+
+    private fun normalizePhone(phone: String): String {
+        val trimmedPhone = phone.trim()
+        // 💡 Si el usuario ingresó 8 dígitos, asumimos que son chilenos y le agregamos el +569
+        return if (trimmedPhone.length == 8 && trimmedPhone.all { it.isDigit() }) {
+            "+569$trimmedPhone"
+        } else {
+            trimmedPhone
+        }
+    }
+
     fun onFullNameChange(name: String) {
         _uiState.update { it.copy(fullName = name, nameError = Validators.validateName(name)) }
     }
@@ -76,7 +87,17 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
         }
     }
     fun onPhoneChange(phone: String) {
-        _uiState.update { it.copy(phone = phone, phoneError = Validators.validatePhone(phone.ifBlank { null })) }
+        // 💡 Normalizamos el teléfono para la validación antes de guardarlo en el state
+        val validatedPhone = normalizePhone(phone.ifBlank { "" })
+
+        _uiState.update {
+            it.copy(
+                // 💡 Guardamos el texto crudo para que el usuario pueda seguir escribiendo
+                phone = phone,
+                // 💡 Validamos el teléfono normalizado
+                phoneError = Validators.validatePhone(validatedPhone.ifBlank { null })
+            )
+        }
     }
     fun onGenreCheckedChange(index: Int, isChecked: Boolean) {
         val updatedGenres = _uiState.value.checkedGenres.toMutableList()
@@ -95,11 +116,16 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
                 _uiState.update { it.copy(submitError = "El correo ya está registrado.") }
             } else {
                 val selectedGenres = Genre.entries.toTypedArray().filterIndexed { index, _ -> state.checkedGenres[index] }
+                // 💡 Normalizamos el teléfono ANTES de pasarlo al modelo User
+                val normalizedPhone = normalizePhone(state.phone.ifBlank { "" })
+
                 val user = User(
                     fullName = state.fullName.trim(),
                     email = state.email.trim(),
                     password = state.pass,
-                    phone = state.phone.ifBlank { null },
+                    // Usamos el teléfono normalizado y, si es inválido (porque la validación falló),
+                    // el ViewModel ya lo habría marcado con error, pero lo normalizamos de todas formas aquí.
+                    phone = normalizedPhone.ifBlank { null },
                     favoriteGenres = selectedGenres
                 )
                 userRepository.registerUserInDb(user)

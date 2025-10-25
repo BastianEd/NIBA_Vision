@@ -14,7 +14,8 @@ object Validators {
     private val lower = Regex(".*[a-z].*")
     private val digit = Regex(".*[0-9].*")
     private val special = Regex(".*[@#\\$%].*")
-    private val phoneRegex = Regex("^\\+?\\d{7,15}$")
+    // 💡 Modificada para aceptar números de 8 dígitos (sin prefijo) o el formato completo (+569xxxxxxxxx)
+    private val phoneRegex = Regex("^((\\+569)?\\d{8})$")
 
     /**
      * Valida el nombre completo del usuario.
@@ -68,7 +69,8 @@ object Validators {
      */
     fun validatePhone(phone: String?): String? =
         if (phone.isNullOrBlank()) null
-        else if (!phoneRegex.matches(phone)) "Número inválido." else null
+        // 💡 Ahora valida un número de 8 dígitos o el formato completo.
+        else if (!phoneRegex.matches(phone)) "Número inválido. (Debe ser de 8 dígitos sin el prefijo, o el formato completo +569)." else null
 
     /**
      * Valida que se haya seleccionado al menos un género favorito.
