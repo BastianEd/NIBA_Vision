@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.util.Validators
+import kotlinx.coroutines.Dispatchers // <-- AÑADE ESTE IMPORT
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +19,7 @@ data class LoginUiState(
     val passError: String? = null,
     val loginError: String? = null,
     val isLoginSuccess: Boolean = false,
-    val isLoginLoading: Boolean = false // 💡 Nuevo: Estado para indicar si el proceso de login está activo
+    val isLoginLoading: Boolean = false
 )
 
 class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
@@ -35,18 +36,17 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
     }
 
     fun login() {
-        // Marcamos el inicio de la carga y limpiamos errores de intentos anteriores.
         _uiState.update { it.copy(isLoginLoading = true, loginError = null) }
 
-        // Usamos una corrutina para llamar a la base de datos de forma segura
-        viewModelScope.launch { // Llamar a la BD
+        // *** CAMBIO AQUÍ: Añadimos (Dispatchers.IO) ***
+        // Le decimos a la corutina que se ejecute en un hilo de fondo
+        viewModelScope.launch(Dispatchers.IO) {
             val state = _uiState.value
-            // Nueva función 'suspend' del repositorio
             val result = userRepository.login(state.email.trim(), state.pass)
             if (result.isSuccess) {
-                _uiState.update { it.copy(isLoginSuccess = true, loginError = null, isLoginLoading = false) } // 💡 Limpiamos la carga al terminar
+                _uiState.update { it.copy(isLoginSuccess = true, loginError = null, isLoginLoading = false) }
             } else {
-                _uiState.update { it.copy(loginError = result.exceptionOrNull()?.message, isLoginLoading = false) } // 💡 Limpiamos la carga al fallar
+                _uiState.update { it.copy(loginError = result.exceptionOrNull()?.message, isLoginLoading = false) }
             }
         }
     }

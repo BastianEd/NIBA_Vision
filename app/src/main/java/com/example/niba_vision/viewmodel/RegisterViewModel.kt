@@ -6,13 +6,14 @@ import com.example.niba_vision.data.Genre
 import com.example.niba_vision.data.User
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.util.Validators
+import kotlinx.coroutines.Dispatchers // <-- AÑADE ESTE IMPORT
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Estado de la UI para la pantalla de registro
+// ... (data class RegisterUiState sin cambios) ...
 data class RegisterUiState(
     val fullName: String = "",
     val email: String = "",
@@ -35,27 +36,13 @@ data class RegisterUiState(
                 fullName.isNotBlank() && email.isNotBlank() && pass.isNotBlank() && confirmPass.isNotBlank()
 }
 
-/**
- * ViewModel responsable de la pantalla de registro.
- *
- * - Mantiene el estado de la UI en un [MutableStateFlow] de [RegisterUiState].
- * - Expone `uiState` como [StateFlow] inmutable para la vista.
- * - Proporciona métodos para actualizar cada campo del formulario y validar
- * usando las utilidades de `Validators`.
- * - Ejecuta la lógica de registro en una coroutine de `viewModelScope`:
- * verifica duplicados con [UserRepository.exists] y persiste el usuario con
- * [UserRepository.registerUserInDb].
- *
- * Efectos secundarios:
- * - Llamadas a `UserRepository` (I/O) desde `register`.
- */
 class RegisterViewModel(private val userRepository: UserRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
+    // ... (funciones onFullNameChange, onEmailChange, etc. sin cambios) ...
     private fun normalizePhone(phone: String): String {
         val trimmedPhone = phone.trim()
-        // 💡 Si el usuario ingresó 8 dígitos, asumimos que son chilenos y le agregamos el +569
         return if (trimmedPhone.length == 8 && trimmedPhone.all { it.isDigit() }) {
             "+569$trimmedPhone"
         } else {
@@ -87,14 +74,11 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
         }
     }
     fun onPhoneChange(phone: String) {
-        // 💡 Normalizamos el teléfono para la validación antes de guardarlo en el state
         val validatedPhone = normalizePhone(phone.ifBlank { "" })
 
         _uiState.update {
             it.copy(
-                // 💡 Guardamos el texto crudo para que el usuario pueda seguir escribiendo
                 phone = phone,
-                // 💡 Validamos el teléfono normalizado
                 phoneError = Validators.validatePhone(validatedPhone.ifBlank { null })
             )
         }
@@ -105,26 +89,27 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
         val genresError = Validators.validateGenres(updatedGenres.count { it })
         _uiState.update { it.copy(checkedGenres = updatedGenres, genresError = genresError) }
     }
+
     fun register() {
         if (!_uiState.value.allValid) {
             _uiState.update { it.copy(submitError = "Por favor, corrige los errores.") }
             return
         }
-        viewModelScope.launch {
+
+        // *** CAMBIO AQUÍ: Añadimos (Dispatchers.IO) ***
+        // Le decimos a la corutina que se ejecute en un hilo de fondo
+        viewModelScope.launch(Dispatchers.IO) {
             val state = _uiState.value
             if (userRepository.exists(state.email.trim())) {
                 _uiState.update { it.copy(submitError = "El correo ya está registrado.") }
             } else {
                 val selectedGenres = Genre.entries.toTypedArray().filterIndexed { index, _ -> state.checkedGenres[index] }
-                // 💡 Normalizamos el teléfono ANTES de pasarlo al modelo User
                 val normalizedPhone = normalizePhone(state.phone.ifBlank { "" })
 
                 val user = User(
                     fullName = state.fullName.trim(),
                     email = state.email.trim(),
                     password = state.pass,
-                    // Usamos el teléfono normalizado y, si es inválido (porque la validación falló),
-                    // el ViewModel ya lo habría marcado con error, pero lo normalizamos de todas formas aquí.
                     phone = normalizedPhone.ifBlank { null },
                     favoriteGenres = selectedGenres
                 )
