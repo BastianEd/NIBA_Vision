@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.niba_vision.data.Genre
 import com.example.niba_vision.viewmodel.RegisterViewModel
@@ -161,7 +162,17 @@ fun RegisterScreen(
                 Button(
                     onClick = { registerViewModel.register() },
                     enabled = uiState.allValid, // 👉 El ViewModel decide si todos los campos son correctos.
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                            // Color de fondo cuando el botón está HABILITADO
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        // Color del texto cuando el botón está HABILITADO
+                        contentColor = Color.White,
+                        // Color de fondo cuando el botón está DESHABILITADO (¡Esta es la clave!)
+                        disabledContainerColor = Color.Gray,
+                        // Color del texto cuando el botón está DESHABILITADO
+                        disabledContentColor = Color.White
+                    )
                 ) {
                     Text("Crear cuenta")
                 }
@@ -169,7 +180,13 @@ fun RegisterScreen(
                 // 🔙 Botón “Volver” centrado, para regresar al login.
                 TextButton(
                     onClick = onBack,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    colors = ButtonDefaults.buttonColors(
+                        // Color de fondo cuando el botón está HABILITADO
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        // Color del texto cuando el botón está HABILITADO
+                        contentColor = Color.White,
+                    )
                 ) {
                     Text("Volver")
                 }
