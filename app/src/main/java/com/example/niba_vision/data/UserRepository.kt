@@ -31,7 +31,8 @@ class UserRepository(private val userDao: UserDao) {
                 password = userEntity.password, // Considera no pasar la contraseña al modelo de UI por seguridad
                 phone = userEntity.phone,
                 // Convierte el String de géneros de nuevo a una List<Genre>
-                favoriteGenres = userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) }
+                favoriteGenres = userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) },
+                profilePictureUri = userEntity.profilePictureUri
             )
             Result.success(user)
         } else {
@@ -64,7 +65,8 @@ class UserRepository(private val userDao: UserDao) {
             password = user.password,
             phone = user.phone,
             // Convierte la lista de géneros a un único String para poder guardarlo en la BD
-            favoriteGenres = user.favoriteGenres.joinToString(",") { it.name }
+            favoriteGenres = user.favoriteGenres.joinToString(",") { it.name },
+            profilePictureUri = user.profilePictureUri
         )
         // Llama a la función del DAO para insertar el nuevo usuario
         userDao.registerUser(userEntity)

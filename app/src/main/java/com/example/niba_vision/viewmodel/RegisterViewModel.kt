@@ -6,12 +6,13 @@ import com.example.niba_vision.data.Genre
 import com.example.niba_vision.data.User
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.util.Validators
-import kotlinx.coroutines.Dispatchers // <-- AÑADE ESTE IMPORT
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.net.Uri
 
 // ... (data class RegisterUiState sin cambios) ...
 data class RegisterUiState(
@@ -21,6 +22,7 @@ data class RegisterUiState(
     val confirmPass: String = "",
     val phone: String = "",
     val checkedGenres: List<Boolean> = List(Genre.entries.size) { false },
+    val profilePictureUri: Uri? = null,
     val nameError: String? = null,
     val emailError: String? = null,
     val passError: String? = null,
@@ -40,7 +42,6 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    // ... (funciones onFullNameChange, onEmailChange, etc. sin cambios) ...
     private fun normalizePhone(phone: String): String {
         val trimmedPhone = phone.trim()
         return if (trimmedPhone.length == 8 && trimmedPhone.all { it.isDigit() }) {
@@ -90,13 +91,15 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
         _uiState.update { it.copy(checkedGenres = updatedGenres, genresError = genresError) }
     }
 
+    // 2. AÑADIMOS LA FUNCIÓN PARA MANEJAR LA FOTO
+    fun onProfilePictureChange(uri: Uri?) {
+        _uiState.update { it.copy(profilePictureUri = uri) }
+    }
     fun register() {
         if (!_uiState.value.allValid) {
             _uiState.update { it.copy(submitError = "Por favor, corrige los errores.") }
             return
         }
-
-        // *** CAMBIO AQUÍ: Añadimos (Dispatchers.IO) ***
         // Le decimos a la corutina que se ejecute en un hilo de fondo
         viewModelScope.launch(Dispatchers.IO) {
             val state = _uiState.value
@@ -111,7 +114,8 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
                     email = state.email.trim(),
                     password = state.pass,
                     phone = normalizedPhone.ifBlank { null },
-                    favoriteGenres = selectedGenres
+                    favoriteGenres = selectedGenres,
+                    profilePictureUri = state.profilePictureUri?.toString()
                 )
                 userRepository.registerUserInDb(user)
                 _uiState.update { it.copy(isRegistrationSuccess = true, submitError = null) }

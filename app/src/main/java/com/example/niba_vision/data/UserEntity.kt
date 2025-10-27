@@ -13,5 +13,6 @@ data class UserEntity(
     val email: String,
     val password: String,
     val phone: String?,
-    val favoriteGenres: String // Almacenaremos los géneros como un String simple
+    val favoriteGenres: String, // Almacenaremos los géneros como un String simple
+    val profilePictureUri: String? = null
 )
