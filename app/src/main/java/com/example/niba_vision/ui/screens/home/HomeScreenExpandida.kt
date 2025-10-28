@@ -7,21 +7,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.niba_vision.data.AppDatabase
-import com.example.niba_vision.data.BookRepository
-import com.example.niba_vision.data.CartRepository
-import com.example.niba_vision.data.UserRepository
-import com.example.niba_vision.ui.theme.NIBA_VisionTheme
 import com.example.niba_vision.viewmodel.AppViewModelFactory
 import com.example.niba_vision.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreenExpandida(viewModelFactory: AppViewModelFactory) {
+fun HomeScreenExpandida(
+    viewModelFactory: AppViewModelFactory,
+    onLogout: () -> Unit
+) {
     val viewModel: HomeViewModel = viewModel(factory = viewModelFactory)
     val uiState by viewModel.uiState.collectAsState()
 
@@ -71,7 +67,10 @@ fun HomeScreenExpandida(viewModelFactory: AppViewModelFactory) {
                             contentPadding = PaddingValues(32.dp)
                         )
                         HomeRoute.Cart -> CartScreen()
-                        HomeRoute.Profile -> ProfileScreen()
+                        HomeRoute.Profile -> ProfileScreen(
+                            viewModelFactory = viewModelFactory,
+                            onLogout = onLogout
+                        )
                     }
                 }
             }

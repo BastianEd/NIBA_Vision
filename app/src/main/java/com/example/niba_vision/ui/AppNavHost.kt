@@ -60,7 +60,14 @@ fun AppNavHost(
             )
         }
         composable(Route.Home.route) {
-            HomeAdaptiveScreen(viewModelFactory = viewModelFactory)
+            HomeAdaptiveScreen(
+                viewModelFactory = viewModelFactory,
+                onLogout = {
+                    nav.navigate(Route.Login.route) {
+                        popUpTo(Route.Home.route) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

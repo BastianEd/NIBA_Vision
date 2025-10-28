@@ -27,6 +27,10 @@ class AppViewModelFactory(
             // Inyecta ambos repositorios en HomeViewModel
             return HomeViewModel(bookRepository, cartRepository) as T // <-- MODIFICADO
         }
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProfileViewModel(userRepository) as T
+        }
 
         throw IllegalArgumentException("Unknown ViewModel class")
     }

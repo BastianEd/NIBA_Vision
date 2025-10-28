@@ -71,4 +71,26 @@ class UserRepository(private val userDao: UserDao) {
         // Llama a la función del DAO para insertar el nuevo usuario
         userDao.registerUser(userEntity)
     }
+    /**
+     * Obtiene el último usuario registrado y lo mapea al modelo de datos `User`.
+     */
+    suspend fun getLastRegisteredUser(): User? {
+        val userEntity = userDao.getLastRegisteredUser()
+        return userEntity?.let {
+            User(
+                fullName = it.fullName,
+                email = it.email,
+                password = "", // No exponer la contraseña en la UI
+                phone = it.phone,
+                favoriteGenres = it.favoriteGenres.split(",").mapNotNull { genreName ->
+                    try {
+                        Genre.valueOf(genreName)
+                    } catch (e: IllegalArgumentException) {
+                        null
+                    }
+                },
+                profilePictureUri = it.profilePictureUri
+            )
+        }
+    }
 }

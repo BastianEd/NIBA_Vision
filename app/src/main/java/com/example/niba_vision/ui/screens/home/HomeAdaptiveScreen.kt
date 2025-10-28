@@ -15,16 +15,32 @@ import com.example.niba_vision.viewmodel.AppViewModelFactory
  * - `HomeScreenExpandida` para tablets grandes o modo escritorio.
  */
 @Composable
-fun HomeAdaptiveScreen(viewModelFactory: AppViewModelFactory) { // Recibe la fábrica
+fun HomeAdaptiveScreen(
+    viewModelFactory: AppViewModelFactory,
+    onLogout: () -> Unit
+) { // Recibe la fábrica
     // Obtiene la clase de tamaño de la ventana actual.
     val windowSizeClass = obtenerWindowSizeClass()
+
 
     // Elige el diseño a mostrar basado en la clase de ancho,
     // pasando la fábrica a cada pantalla.
     when (windowSizeClass.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> HomeScreenCompacta(viewModelFactory = viewModelFactory)
-        WindowWidthSizeClass.Medium -> HomeScreenMediana(viewModelFactory = viewModelFactory)
-        WindowWidthSizeClass.Expanded -> HomeScreenExpandida(viewModelFactory = viewModelFactory)
-        else -> HomeScreenCompacta(viewModelFactory = viewModelFactory) // Diseño por defecto
+        WindowWidthSizeClass.Compact -> HomeScreenCompacta(
+            viewModelFactory = viewModelFactory,
+            onLogout = onLogout
+        )
+        WindowWidthSizeClass.Medium -> HomeScreenMediana(
+            viewModelFactory = viewModelFactory,
+            onLogout = onLogout
+        )
+        WindowWidthSizeClass.Expanded -> HomeScreenExpandida(
+            viewModelFactory = viewModelFactory,
+            onLogout = onLogout
+        )
+        else -> HomeScreenCompacta(
+            viewModelFactory = viewModelFactory,
+            onLogout = onLogout
+        )
     }
 }
