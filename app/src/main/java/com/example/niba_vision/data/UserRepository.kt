@@ -24,6 +24,11 @@ class UserRepository(private val userDao: UserDao) {
 
         // Comprueba si el usuario existe y la contraseña coincide
         return if (userEntity != null && userEntity.password == password) {
+            val genres = if (userEntity.favoriteGenres.isBlank()) {
+                emptyList()
+            } else {
+                userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) }
+            }
             // Si es correcto, convierte la entidad de la BD (UserEntity) a tu modelo de UI (User)
             val user = User(
                 fullName = userEntity.fullName,
@@ -74,9 +79,21 @@ class UserRepository(private val userDao: UserDao) {
     /**
      * Obtiene el último usuario registrado y lo mapea al modelo de datos `User`.
      */
-    suspend fun getLastRegisteredUser(): User? {
+        suspend fun getLastRegisteredUser(): User? {
         val userEntity = userDao.getLastRegisteredUser()
         return userEntity?.let {
+            // ✅ --- TAMBIÉN APLICO EL MISMO CAMBIO AQUÍ POR SEGURIDAD ---
+            val genres = if (it.favoriteGenres.isBlank()) {
+                emptyList()
+            } else {
+                it.favoriteGenres.split(",").mapNotNull { genreName ->
+                    try {
+                        Genre.valueOf(genreName)
+                    } catch (e: IllegalArgumentException) {
+                        null
+                    }
+                }
+            }
             User(
                 fullName = it.fullName,
                 email = it.email,

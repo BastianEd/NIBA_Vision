@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.niba_vision.data.SessionManager
 import com.example.niba_vision.data.BookRepository
 import com.example.niba_vision.data.CartRepository
 import com.example.niba_vision.data.UserRepository
@@ -47,6 +48,8 @@ fun AppNavHost(
             RegisterScreen(
                 onBack = { nav.popBackStack() },
                 onRegistered = {
+                    // Al cerrar sesión, limpiamos el SessionManager
+                    SessionManager.logout()
                     nav.navigate(Route.Login.route) {
                         popUpTo(Route.Login.route) { inclusive = true }
                     }

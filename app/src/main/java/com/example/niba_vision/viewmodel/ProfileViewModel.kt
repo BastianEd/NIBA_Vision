@@ -2,8 +2,9 @@ package com.example.niba_vision.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.niba_vision.data.SessionManager
 import com.example.niba_vision.data.User
-import com.example.niba_vision.data.UserRepository
+//import com.example.niba_vision.data.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,20 +26,21 @@ data class ProfileUiState(
  * desde una sesión. Para este ejemplo, simularemos esto obteniendo el
  * último usuario registrado de la base de datos.
  */
-class ProfileViewModel(private val userRepository: UserRepository) : ViewModel() {
+class ProfileViewModel() : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
-        loadCurrentUser()
+        observeCurrentUser()
     }
 
-    private fun loadCurrentUser() {
+    private fun observeCurrentUser() {
         viewModelScope.launch {
-            // Simulamos la obtención del usuario actual
-            val user = userRepository.getLastRegisteredUser()
-            _uiState.update {
-                it.copy(currentUser = user, isLoading = false)
+            // Observamos el usuario actual desde el SessionManager
+            SessionManager.currentUser.collect { user ->
+                _uiState.update {
+                    it.copy(currentUser = user, isLoading = false)
+                }
             }
         }
     }

@@ -2,9 +2,10 @@ package com.example.niba_vision.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.niba_vision.data.SessionManager
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.util.Validators
-import kotlinx.coroutines.Dispatchers // <-- AÑADE ESTE IMPORT
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +45,9 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
             val state = _uiState.value
             val result = userRepository.login(state.email.trim(), state.pass)
             if (result.isSuccess) {
+                result.getOrNull()?.let {
+                    user -> SessionManager.login(user)
+                }
                 _uiState.update { it.copy(isLoginSuccess = true, loginError = null, isLoginLoading = false) }
             } else {
                 _uiState.update { it.copy(loginError = result.exceptionOrNull()?.message, isLoginLoading = false) }
