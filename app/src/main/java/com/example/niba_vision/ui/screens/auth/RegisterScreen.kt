@@ -1,11 +1,9 @@
 package com.example.niba_vision.ui.screens.auth
 
-import android.Manifest
+import android.Manifest // Para el permiso de la cámara
 import android.content.Context
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,9 +20,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
+import androidx.core.content.FileProvider // Para crear la URI de la cámara
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
+import coil.compose.AsyncImage // Para cargar la imagen de perfil
 import com.example.niba_vision.data.Genre
 import com.example.niba_vision.viewmodel.RegisterViewModel
 import androidx.compose.animation.*
@@ -34,112 +32,115 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Usamos la misma constante de duración para la consistencia
+// Constante para la duración de la animación de entrada
 const val ANIMATION_DURATION_MS_REGISTER = 600
 
-// 🧾 Pantalla de registro de nuevos usuarios.
-// Aquí el usuario ingresa su nombre, correo, contraseña, teléfono y géneros favoritos.
+/**
+ * Composable que representa la pantalla de Registro de usuarios.
+ * Recolecta todos los datos del nuevo usuario, incluyendo la foto de perfil y la dirección.
+ */
 @Composable
 fun RegisterScreen(
-    onBack: () -> Unit,                 // 👉 Acción para volver al login.
-    onRegistered: () -> Unit,           // 👉 Acción que se ejecuta cuando el registro fue exitoso.
-    registerViewModel: RegisterViewModel = viewModel() // 👉 ViewModel que maneja los datos y validaciones.
+    onBack: () -> Unit,                 // Callback para navegar hacia atrás (a Login)
+    onRegistered: () -> Unit,           // Callback para navegar a Login después de un registro exitoso
+    registerViewModel: RegisterViewModel = viewModel() // Inyección del ViewModel
 ) {
-    // 📡 Observamos el estado de la pantalla (nombre, correo, errores, etc.)
+    // 📡 Observamos el estado de la pantalla (UiState) desde el ViewModel
     val uiState by registerViewModel.uiState.collectAsState()
-    // 🎵 Lista de géneros (tomada del enum Genre).
+    // Se obtiene la lista de géneros disponibles desde el Enum
     val genreOptions = Genre.entries
-    // 📍 Obtenemos el contexto actual, necesario para la cámara y el FileProvider.
+    // Se obtiene el contexto actual, necesario para la cámara y el FileProvider
     val context = LocalContext.current
 
-    // 💡 Estado de transición para controlar la animación de entrada, se inicializa en 'false'
+    // Estado de transición para controlar la animación de entrada
     val transitionState = remember { MutableTransitionState(false) }
 
-    // 🚀 Al cargar la pantalla, iniciamos la animación del formulario (solo una vez)
-    LaunchedEffect(Unit) { transitionState.targetState = true }
+    // Efecto que se ejecuta una sola vez al cargar el Composable
+    LaunchedEffect(Unit) {
+        transitionState.targetState = true // Inicia la animación de entrada
+    }
 
-    // 🚀 Si el registro fue exitoso, navegamos automáticamente de vuelta al login.
+    // Efecto que observa si el registro fue exitoso
     LaunchedEffect(uiState.isRegistrationSuccess) {
         if (uiState.isRegistrationSuccess) {
-            onRegistered()
+            onRegistered() // Navega a la siguiente pantalla
         }
     }
 
-    // 📸 --- Lógica y Launchers para la Cámara ---
-    // Creamos un archivo temporal para guardar la foto
-    // NOTE: usamos el cache interno (context.cacheDir) para que coincida con res/xml/file_paths.xml
+    // --- Lógica y Launchers para la Cámara ---
+
+    // 1. Crea un archivo temporal en el caché para guardar la foto
     val file = context.createImageFile()
-    // Obtenemos una URI segura para ese archivo usando un FileProvider
+    // 2. Obtiene una URI segura para ese archivo usando un FileProvider
     val uri = FileProvider.getUriForFile(
         context,
-        context.packageName + ".provider",
+        context.packageName + ".provider", // La autoridad debe coincidir con AndroidManifest.xml
         file
     )
 
-    // Launcher que abre la cámara y espera el resultado (una foto)
+    // 3. Launcher que abre la cámara y espera el resultado (un booleano 'success')
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success) {
-                // Si la foto se tomó con éxito, actualizamos el ViewModel
+                // Si la foto se tomó con éxito, se actualiza el ViewModel con la URI
                 registerViewModel.onProfilePictureChange(uri)
             }
         }
 
-    // Launcher que solicita el permiso para usar la cámara
+    // 4. Launcher que solicita el permiso para usar la cámara
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Si el usuario concede el permiso, abrimos la cámara
+            // Si el usuario concede el permiso, se abre la cámara
             cameraLauncher.launch(uri)
         }
-        // Opcional: podrías mostrar un mensaje si el permiso es denegado
+        // (Opcional: mostrar un mensaje si el permiso es denegado)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 💫 Aplicamos la animación de entrada más "vívida"
+        // 💫 Contenedor de animación: aplica una animación de entrada al formulario
         AnimatedVisibility(
             visibleState = transitionState,
-            // Animación de entrada: desliza desde el fondo y se desvanece
             enter = slideInVertically(
-                initialOffsetY = { it * 2 },
+                initialOffsetY = { it * 2 }, // Desliza desde abajo
                 animationSpec = tween(ANIMATION_DURATION_MS_REGISTER)
-            ) + fadeIn(tween(ANIMATION_DURATION_MS_REGISTER * 3 / 4, delayMillis = ANIMATION_DURATION_MS_REGISTER / 4)),
+            ) + fadeIn(tween(ANIMATION_DURATION_MS_REGISTER * 3 / 4, delayMillis = ANIMATION_DURATION_MS_REGISTER / 4)), // Aparece gradualmente
             exit = fadeOut(tween(300))
         ) {
-            // 🧱 Columna principal que contiene todo el formulario.
+            // 🧱 Columna principal que contienetodo el formulario
             Column(
                 Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()) // 👉 Permite desplazarse si hay muchos campos.
+                    .verticalScroll(rememberScrollState()) // Permite desplazarse si el contenido no cabe
                     .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, // Centramos los elementos
-                verticalArrangement = Arrangement.spacedBy(12.dp) // 👉 Espacio uniforme entre elementos.
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Espacio uniforme entre elementos
             ) {
-                // 🏷️ Título de la pantalla.
+
                 Text("Registro", style = MaterialTheme.typography.headlineMedium)
 
                 // 📸 --- Sección para la Foto de Perfil ---
                 Box(
                     modifier = Modifier
                         .size(120.dp)
-                        .clip(CircleShape)
+                        .clip(CircleShape) // Forma circular
                         .clickable {
-                            // Al hacer clic, pedimos el permiso para la cámara
+                            // Al hacer clic, se pide el permiso para la cámara
                             permissionLauncher.launch(Manifest.permission.CAMERA)
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     if (uiState.profilePictureUri != null) {
-                        // Si ya hay una foto, la mostramos
+                        // Si ya hay una foto, se muestra usando Coil (AsyncImage)
                         AsyncImage(
                             model = uiState.profilePictureUri,
                             contentDescription = "Foto de perfil",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop // Rellena el círculo
                         )
                     } else {
-                        // Si no, mostramos un ícono placeholder
+                        // Si no, se muestra un ícono placeholder de cámara
                         Icon(
                             painter = painterResource(id = android.R.drawable.ic_menu_camera),
                             contentDescription = "Tomar foto",
@@ -150,7 +151,7 @@ fun RegisterScreen(
                 }
                 Text("Toca el círculo para añadir una foto", style = MaterialTheme.typography.bodySmall)
 
-                // 👤 Campo: Nombre completo del usuario.
+                // 👤 Campo: Nombre completo
                 OutlinedTextField(
                     value = uiState.fullName,
                     onValueChange = { registerViewModel.onFullNameChange(it) },
@@ -161,7 +162,7 @@ fun RegisterScreen(
                 if (uiState.nameError != null)
                     Text(uiState.nameError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
 
-                // 📧 Campo: Correo institucional.
+                // 📧 Campo: Correo
                 OutlinedTextField(
                     value = uiState.email,
                     onValueChange = { registerViewModel.onEmailChange(it) },
@@ -173,12 +174,12 @@ fun RegisterScreen(
                 if (uiState.emailError != null)
                     Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
 
-                // 🔒 Campo: Contraseña (oculta con puntitos).
+                // 🔒 Campo: Contraseña
                 OutlinedTextField(
                     value = uiState.pass,
                     onValueChange = { registerViewModel.onPasswordChange(it) },
                     label = { Text("Contraseña") },
-                    visualTransformation = PasswordVisualTransformation(), // 👉 Oculta los caracteres.
+                    visualTransformation = PasswordVisualTransformation(), // Oculta los caracteres
                     isError = uiState.passError != null,
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -186,7 +187,7 @@ fun RegisterScreen(
                 if (uiState.passError != null)
                     Text(uiState.passError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
 
-                // ✅ Campo: Confirmar contraseña (también oculta).
+                // ✅ Campo: Confirmar contraseña
                 OutlinedTextField(
                     value = uiState.confirmPass,
                     onValueChange = { registerViewModel.onConfirmPasswordChange(it) },
@@ -199,80 +200,85 @@ fun RegisterScreen(
                 if (uiState.confirmPassError != null)
                     Text(uiState.confirmPassError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
 
-                // ☎️ Campo: Teléfono (opcional).
+                // ☎️ Campo: Teléfono
                 OutlinedTextField(
                     value = uiState.phone,
                     onValueChange = { registerViewModel.onPhoneChange(it) },
-                    // 💡 Indicamos al usuario que solo necesita los últimos 8 dígitos.
                     label = { Text("Teléfono (opcional, 8 dígitos)") },
                     isError = uiState.phoneError != null,
                     singleLine = true,
-                    // 💡 Agregamos un prefijo visible para una mejor UX.
-                    leadingIcon = { Text("+569") },
+                    leadingIcon = { Text("+569") }, // Prefijo visual
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (uiState.phoneError != null)
                     Text(uiState.phoneError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
 
-                // 🎶 Sección: Géneros favoritos del usuario.
+                // 🏠 --- CAMBIO: Campo Dirección ---
+                OutlinedTextField(
+                    value = uiState.address,
+                    onValueChange = { registerViewModel.onAddressChange(it) },
+                    label = { Text("Dirección de despacho") },
+                    isError = uiState.addressError != null, // Muestra error si está vacío
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (uiState.addressError != null)
+                    Text(uiState.addressError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
+                // ---------------------------------
+
+                // 🎶 Sección: Géneros favoritos
                 Text(
                     "Géneros favoritos (selecciona al menos uno):",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.fillMaxWidth() // Alinea el texto a la izquierda
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Column(Modifier.fillMaxWidth()) {
-                    // ✅ Por cada género, mostramos una fila con checkbox + texto.
+                    // Itera sobre todos los géneros y crea un Checkbox para cada uno
                     genreOptions.forEachIndexed { index, genre ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Checkbox(
-                                checked = uiState.checkedGenres[index], // 👉 Muestra si está marcado.
+                                checked = uiState.checkedGenres[index], // Estado de marcado
                                 onCheckedChange = { isChecked ->
-                                    registerViewModel.onGenreCheckedChange(index, isChecked) // 👉 Actualiza el ViewModel.
+                                    registerViewModel.onGenreCheckedChange(index, isChecked) // Notifica al ViewModel
                                 }
                             )
-                            // 👉 Mostramos el nombre del género (reemplazando "_" por espacio).
-                            Text(genre.name.replace("_", " "))
+                            Text(genre.name.replace("_", " ")) // Reemplaza "NO_FICCION" por "NO FICCION"
                         }
                     }
                 }
                 if (uiState.genresError != null)
                     Text(uiState.genresError!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth())
 
-                // ⚠️ Si hay error general de envío, lo mostramos aquí.
+                // ⚠️ Muestra un error general si el envío falla (ej: email duplicado)
                 if (uiState.submitError != null)
                     Text(uiState.submitError!!, color = MaterialTheme.colorScheme.error)
 
-                // 🚀 Botón de “Crear cuenta”. Solo se habilita si todo está validado.
+                // 🚀 Botón de “Crear cuenta”
                 Button(
                     onClick = { registerViewModel.register() },
-                    enabled = uiState.allValid, // 👉 El ViewModel decide si todos los campos son correctos.
+                    // Se habilita solo si 'allValid' (en el UiState) es verdadero
+                    enabled = uiState.allValid,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        // Color de fondo cuando el botón está HABILITADO
                         containerColor = MaterialTheme.colorScheme.primary,
-                        // Color del texto cuando el botón está HABILITADO
                         contentColor = Color.White,
-                        // Color de fondo cuando el botón está DESHABILITADO (¡Esta es la clave!)
-                        disabledContainerColor = Color.Gray,
-                        // Color del texto cuando el botón está DESHABILITADO
+                        disabledContainerColor = Color.Gray, // Color cuando está deshabilitado
                         disabledContentColor = Color.White
                     )
                 ) {
                     Text("Crear cuenta")
                 }
 
-                // 🔙 Botón “Volver” centrado, para regresar al login.
+                // 🔙 Botón “Volver” para regresar al login
                 TextButton(
                     onClick = onBack,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     colors = ButtonDefaults.buttonColors(
-                        // Color de fondo cuando el botón está HABILITADO
                         containerColor = MaterialTheme.colorScheme.primary,
-                        // Color del texto cuando el botón está HABILITADO
                         contentColor = Color.White,
                     )
                 ) {
@@ -283,11 +289,13 @@ fun RegisterScreen(
     }
 }
 
-// Función de utilidad para crear el archivo de imagen temporal
+/**
+ * Función de utilidad (mEtodo de extensión de Context) para crear un archivo de imagen temporal.
+ */
 private fun Context.createImageFile(): File {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     val imageFileName = "JPEG_" + timeStamp + "_"
-    // ...usar cacheDir (interno) en vez de externalCacheDir para que FileProvider lo encuentre según res/xml/file_paths.xml
+    // Se usa 'cacheDir' (almacenamiento interno en caché)
     return File.createTempFile(
         imageFileName,
         ".jpg",

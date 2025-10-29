@@ -12,6 +12,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.niba_vision.viewmodel.AppViewModelFactory
 import com.example.niba_vision.viewmodel.HomeViewModel
 
+/**
+ * Representa la pantalla principal para dispositivos expandidos (tablets grandes).
+ * Utiliza un riel de navegación lateral (NavigationRail).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenExpandida(
@@ -35,8 +39,7 @@ fun HomeScreenExpandida(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // *** CAMBIO AQUÍ ***
-            // Usamos un NavigationRail (barra lateral) en lugar de NavigationBar
+            // Riel de navegación lateral
             NavigationRail {
                 navItems.forEach { screen ->
                     NavigationRailItem(
@@ -48,10 +51,10 @@ fun HomeScreenExpandida(
                 }
             }
 
-            // Contenido principal (Detail Pane)
+            // Contenido principal (Panel de detalles)
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1f) // Ocupa el resto del espacio
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
@@ -66,7 +69,10 @@ fun HomeScreenExpandida(
                             minSize = 180.dp,
                             contentPadding = PaddingValues(32.dp)
                         )
-                        HomeRoute.Cart -> CartScreen()
+                        // --- CAMBIO AQUÍ ---
+                        // Se pasa la instancia del viewModel a la CartScreen
+                        HomeRoute.Cart -> CartScreen(viewModel = viewModel)
+                        // --------------------
                         HomeRoute.Profile -> ProfileScreen(
                             viewModelFactory = viewModelFactory,
                             onLogout = onLogout

@@ -15,7 +15,7 @@ class UserRepository(private val userDao: UserDao) {
      *
      * @param email El correo electrónico del usuario.
      * @param password La contraseña del usuario.
-     * @return Un [Result] que contiene el objeto [User] si las credenciales son correctas,
+     * @return Un [Result] que contiene el objeto [User] (modelo de dominio) si las credenciales son correctas,
      * o [Result.failure] con una excepción si son inválidas.
      */
     suspend fun login(email: String, password: String): Result<User> {
@@ -24,20 +24,21 @@ class UserRepository(private val userDao: UserDao) {
 
         // Comprueba si el usuario existe y la contraseña coincide
         return if (userEntity != null && userEntity.password == password) {
+            // Convierte la lista de géneros (String) de nuevo a List<Genre>
             val genres = if (userEntity.favoriteGenres.isBlank()) {
                 emptyList()
             } else {
                 userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) }
             }
-            // Si es correcto, convierte la entidad de la BD (UserEntity) a tu modelo de UI (User)
+            // Si es correcto, convierte la entidad de la BD (UserEntity) a tu modelo de dominio (User)
             val user = User(
                 fullName = userEntity.fullName,
                 email = userEntity.email,
-                password = userEntity.password, // Considera no pasar la contraseña al modelo de UI por seguridad
+                password = userEntity.password, // Se pasa la contraseña, pero el ViewModel debe manejarla
                 phone = userEntity.phone,
-                // Convierte el String de géneros de nuevo a una List<Genre>
-                favoriteGenres = userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) },
-                profilePictureUri = userEntity.profilePictureUri
+                favoriteGenres = genres,
+                profilePictureUri = userEntity.profilePictureUri,
+                address = userEntity.address // <-- CAMBIO: Mapea la dirección
             )
             Result.success(user)
         } else {
@@ -59,7 +60,7 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Registra un nuevo usuario en la base de datos.
-     * Convierte el objeto [User] del ViewModel a un [UserEntity] antes de insertarlo.
+     * Convierte el objeto [User] (modelo de dominio) a un [UserEntity] (entidad de BD) antes de insertarlo.
      *
      * @param user El objeto [User] con los datos del nuevo usuario.
      */
@@ -71,43 +72,10 @@ class UserRepository(private val userDao: UserDao) {
             phone = user.phone,
             // Convierte la lista de géneros a un único String para poder guardarlo en la BD
             favoriteGenres = user.favoriteGenres.joinToString(",") { it.name },
-            profilePictureUri = user.profilePictureUri
+            profilePictureUri = user.profilePictureUri,
+            address = user.address // <-- CAMBIO: Mapea la dirección
         )
         // Llama a la función del DAO para insertar el nuevo usuario
         userDao.registerUser(userEntity)
-    }
-    /**
-     * Obtiene el último usuario registrado y lo mapea al modelo de datos `User`.
-     */
-        suspend fun getLastRegisteredUser(): User? {
-        val userEntity = userDao.getLastRegisteredUser()
-        return userEntity?.let {
-            // ✅ --- TAMBIÉN APLICO EL MISMO CAMBIO AQUÍ POR SEGURIDAD ---
-            val genres = if (it.favoriteGenres.isBlank()) {
-                emptyList()
-            } else {
-                it.favoriteGenres.split(",").mapNotNull { genreName ->
-                    try {
-                        Genre.valueOf(genreName)
-                    } catch (e: IllegalArgumentException) {
-                        null
-                    }
-                }
-            }
-            User(
-                fullName = it.fullName,
-                email = it.email,
-                password = "", // No exponer la contraseña en la UI
-                phone = it.phone,
-                favoriteGenres = it.favoriteGenres.split(",").mapNotNull { genreName ->
-                    try {
-                        Genre.valueOf(genreName)
-                    } catch (e: IllegalArgumentException) {
-                        null
-                    }
-                },
-                profilePictureUri = it.profilePictureUri
-            )
-        }
     }
 }

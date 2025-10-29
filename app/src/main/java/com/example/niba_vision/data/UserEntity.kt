@@ -3,7 +3,10 @@ package com.example.niba_vision.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// La anotación @Entity le dice a Room que esta clase representa una tabla.
+/**
+ * Define la estructura de la tabla 'users' en la base de datos Room.
+ * Esta clase representa cómo se almacenan los datos en SQLite.
+ */
 @Entity(tableName = "users")
 data class UserEntity(
     // @PrimaryKey define la clave primaria de la tabla.
@@ -13,6 +16,7 @@ data class UserEntity(
     val email: String,
     val password: String,
     val phone: String?,
-    val favoriteGenres: String, // Almacenaremos los géneros como un String simple
-    val profilePictureUri: String? = null
+    val favoriteGenres: String, // Almacena la lista de géneros como un String (ej: "FICCION,TERROR")
+    val profilePictureUri: String? = null,
+    val address: String? = null // <-- CAMBIO: Añadido campo de dirección
 )

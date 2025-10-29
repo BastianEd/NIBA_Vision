@@ -12,6 +12,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.niba_vision.viewmodel.AppViewModelFactory
 import com.example.niba_vision.viewmodel.HomeViewModel
 
+/**
+ * Representa la pantalla principal para dispositivos medianos (tablets pequeñas).
+ * También utiliza una barra de navegación inferior.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenMediana(
@@ -59,7 +63,10 @@ fun HomeScreenMediana(
                         minSize = 180.dp,
                         contentPadding = PaddingValues(24.dp)
                     )
-                    HomeRoute.Cart -> CartScreen()
+                    // --- CAMBIO AQUÍ ---
+                    // Se pasa la instancia del viewModel a la CartScreen
+                    HomeRoute.Cart -> CartScreen(viewModel = viewModel)
+                    // --------------------
                     HomeRoute.Profile -> ProfileScreen(
                         viewModelFactory = viewModelFactory,
                         onLogout = onLogout
