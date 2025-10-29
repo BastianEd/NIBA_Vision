@@ -62,6 +62,7 @@ object CartRepository {
     /**
      * Limpia la cesta de compra (después de un pago exitoso).
      * Reemplaza el mapa actual por un mapa vacío.
+     * ESTA ES LA FUNCIÓN QUE FALTABA.
      */
     fun clearCart() {
         _items.update { emptyMap() }
