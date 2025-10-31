@@ -5,7 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-// --- CAMBIO 1: Versión incrementada de 2 a 3 ---
 // Esto le dice a Room que la estructura ha cambiado.
 @Database(entities = [UserEntity::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
