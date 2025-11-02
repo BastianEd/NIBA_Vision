@@ -1,7 +1,7 @@
 # Proyecto: ZONALIBROS - Aplicación Android Nativa con Arquitectura MVVM
 
 # Login
-![Captura de pantalla de la aplicacion](https://i.ibb.co/nsw8J81c/Screenshot-1.png)
+![Captura de pantalla de la aplicacion](https://i.ibb.co/nsw8J81c/Login.png)
 
 # Registro de Usuario
 ![Captura de pantalla de la aplicacion](https://i.ibb.co/yBkX9NS7/image.png)
@@ -10,10 +10,10 @@
 ![Captura de pantalla de la aplicacion](https://i.ibb.co/5X642k5G/image.png)
 
 # Carrito Pantalla
-![Captura de pantalla de la aplicacion](https://i.ibb.co/xtWCxQQ0/Screenshot-2.png)
+![Captura de pantalla de la aplicacion](https://i.ibb.co/xtWCxQQ0/Carrito.png)
 
 # Perfil Pantalla
-![Captura de pantalla de la aplicacion](https://i.ibb.co/SDmzX78S/image.png)
+![Captura de pantalla de la aplicacion](https://i.ibb.co/SDmzX78S/Perfil.png)
 
 ## Descripción del Proyecto
 
