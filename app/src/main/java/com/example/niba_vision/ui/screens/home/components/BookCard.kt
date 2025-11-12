@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage // Para cargar imágenes desde URL
 import com.example.niba_vision.data.Book
 import kotlinx.coroutines.launch // Para lanzar la corutina
+import com.example.niba_vision.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,11 +73,20 @@ fun BookCard(
                 // Se usa AsyncImage de Coil para cargar la imagen desde la URL
                 AsyncImage(
                     model = book.coverImageUrl, // La URL de la portada del libro
-                    contentDescription = book.title,
+                    contentDescription = book.title ?: "Portada", // (Usamos el título)
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop, // Escala la imagen para rellenar el Box
-                    // Muestra un placeholder mientras carga la imagen
-                    placeholder = painterResource(id = com.example.niba_vision.R.drawable.ic_launcher_foreground)
+                    contentScale = ContentScale.Crop,
+
+                    // --- INICIO DE CAMBIOS ---
+
+                    // 1. Cambia 'drawable' a 'mipmap' para usar tu nuevo logo
+                    placeholder = painterResource(id = R.mipmap.ic_launcher_foreground),
+
+                    // 2. AÑADE ESTA LÍNEA:
+                    // Esto mostrará el logo si Coil falla (ej: 404, sin internet)
+                    error = painterResource(id = R.mipmap.ic_launcher_foreground)
+
+                    // --- FIN DE CAMBIOS ---
                 )
 
                 // Muestra la insignia "N" si el libro es nuevo
@@ -104,20 +114,20 @@ fun BookCard(
 
             // Información del libro
             Text(
-                text = book.title,
+                text = book.title ?: "Sin título",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis // Pone "..." si el texto es muy largo
             )
             Text(
-                text = book.author,
+                text = book.author ?: "Sin autor",
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = book.price,
+                text = book.price ?: "Precio no disponible",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(vertical = 8.dp)

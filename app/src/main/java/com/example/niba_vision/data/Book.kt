@@ -1,8 +1,5 @@
 package com.example.niba_vision.data
 
-// Ya no necesitamos @DrawableRes
-// import androidx.annotation.DrawableRes
-
 /**
  * Modelo de datos que representa un libro.
  *
@@ -10,10 +7,10 @@ package com.example.niba_vision.data
  */
 data class Book(
     val id: Int,
-    val title: String,
-    val author: String,
-    val price: String,
-    val priceValue: Double,
-    val coverImageUrl: String, // <-- MODIFICADO (antes era coverImageRes)
+    val title: String?,
+    val author: String?,
+    val price: String?,
+    val priceValue: Double?,
+    val coverImageUrl: String?,
     val isNew: Boolean = false
 )

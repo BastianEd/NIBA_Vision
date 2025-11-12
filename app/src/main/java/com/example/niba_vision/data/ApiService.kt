@@ -5,11 +5,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.GET
 
 // IMPORTANTE:
 // Usa "10.0.2.2" para conectar al "localhost" de tu computadora
 // desde el emulador de Android.
-private const val BASE_URL = "http://10.0.2.2:8080/"
+private const val BASE_URL = "http://192.168.1.124:8080/"
 
 // Creamos el cliente de Retrofit
 object ApiClient {
@@ -31,4 +32,9 @@ interface ApiService {
 
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<UserApiResponse> // Devuelve el objeto User
+
+    // Define el endpoint GET para /api/books
+    // Devuelve una Lista de tu modelo de datos Book
+    @GET("api/books")
+    suspend fun getBooks(): List<Book>
 }

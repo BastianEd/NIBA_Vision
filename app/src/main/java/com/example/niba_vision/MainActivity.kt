@@ -39,11 +39,9 @@ fun App() {
         UserRepository(apiService)
     }
 
-    // (AppDatabase y UserDao ya no son necesarios para el login/registro)
-
-    // --- FIN DE CAMBIOS ---
-
-    val bookRepository = remember { BookRepository() }
+    val bookRepository = remember {
+        BookRepository(apiService)
+    }
     val cartRepository = CartRepository
 
     // Pasa todos los repositorios al NavHost (esto no cambia)

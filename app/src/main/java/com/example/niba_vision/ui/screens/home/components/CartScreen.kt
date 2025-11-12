@@ -43,7 +43,7 @@ fun CartScreen(viewModel: HomeViewModel) {
     currencyFormat.maximumFractionDigits = 0 // No se muestran decimales (ej: $22.900)
 
     // Se calcula el precio total sumando (precio * cantidad) de cada item en el carrito.
-    val total = cartItems.sumOf { it.book.priceValue * it.quantity }
+    val total = cartItems.sumOf { (it.book.priceValue ?: 0.0) * it.quantity }
 
     Box(
         modifier = Modifier
@@ -128,7 +128,7 @@ fun CartScreen(viewModel: HomeViewModel) {
 @Composable
 fun CartItemRow(item: CartItem, currencyFormat: NumberFormat) {
     // Calcula el total para esta fila específica (Precio del libro * cantidad)
-    val itemTotal = item.book.priceValue * item.quantity
+    val itemTotal = (item.book.priceValue ?: 0.0) * item.quantity
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -156,13 +156,13 @@ fun CartItemRow(item: CartItem, currencyFormat: NumberFormat) {
 
             // 2. Columna de Información (Nombre, Cantidad, Precio Unitario)
             Column(modifier = Modifier.weight(1f)) { // 'weight(1f)' hace que ocupe el espacio sobrante
-                Text(item.book.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(item.book.title ?: "Sin título", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Text(
                     "Cantidad: ${item.quantity}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    item.book.price, // Precio unitario (ej: "$22.900")
+                    item.book.price ?: "N/A", // Precio unitario (ej: "$22.900")
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
