@@ -64,8 +64,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-
-
     // ===== Dependencias de Navegación y Ciclo de Vida =====
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.navigation:navigation-compose:2.8.3") // Navegación en Compose.
@@ -98,4 +96,14 @@ dependencies {
     // If this project only uses Java source, use the Java annotationProcessor
     // No additional plugins are necessary
     annotationProcessor("androidx.room:room-compiler:$room_version")
+
+    // Retrofit (Cliente HTTP para consumir la API)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    // Gson Converter (Convierte el JSON de la API a objetos Kotlin)
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    // (Opcional, pero recomendado) Para ver logs de red
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // Coroutines (Para manejar operaciones de red en segundo plano)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
 }

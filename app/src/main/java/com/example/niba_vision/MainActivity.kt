@@ -5,14 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
-import com.example.niba_vision.data.AppDatabase
 import com.example.niba_vision.data.BookRepository
 import com.example.niba_vision.data.CartRepository
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.ui.AppNavHost
 import com.example.niba_vision.ui.theme.NIBA_VisionTheme
+import com.example.niba_vision.data.ApiClient
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,23 +27,30 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App() {
     val nav = rememberNavController()
-    val context = LocalContext.current
+    // val context = LocalContext.current // Ya no es necesario para el UserRepository
 
+    // --- INICIO DE CAMBIOS ---
+
+    // 1. Obtenemos la instancia de nuestro cliente de API (Retrofit)
+    val apiService = ApiClient.instance
+
+    // 2. Creamos el UserRepository con el ApiService
     val userRepository = remember {
-        val db = AppDatabase.getDatabase(context)
-        UserRepository(db.userDao())
+        UserRepository(apiService)
     }
 
-    val bookRepository = remember { BookRepository() }
+    // (AppDatabase y UserDao ya no son necesarios para el login/registro)
 
-    // El CartRepository es un 'object' (singleton), así que lo pasamos directamente
+    // --- FIN DE CAMBIOS ---
+
+    val bookRepository = remember { BookRepository() }
     val cartRepository = CartRepository
 
-    // Pasa todos los repositorios al NavHost
+    // Pasa todos los repositorios al NavHost (esto no cambia)
     AppNavHost(
         nav = nav,
         userRepository = userRepository,
         bookRepository = bookRepository,
-        cartRepository = cartRepository // <-- AÑADIDO
+        cartRepository = cartRepository
     )
 }

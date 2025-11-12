@@ -133,40 +133,42 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
     }
 
     // Evento llamado cuando se presiona el botón "Crear cuenta"
+    // Dentro de RegisterViewModel.kt
+
     fun register() {
-        // Comprueba si 'allValid' es verdadero
         if (!_uiState.value.allValid) {
             _uiState.update { it.copy(submitError = "Por favor, corrige los errores.") }
             return
         }
 
-        // Lanza una corutina en el hilo de IO (fondo) para operaciones de BD
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) { // Sigue usando Dispatchers.IO para red
             val state = _uiState.value
-            // Comprueba si el email ya existe en la BD
-            if (userRepository.exists(state.email.trim())) {
-                _uiState.update { it.copy(submitError = "El correo ya está registrado.") }
-            } else {
-                // Mapea los géneros de List<Boolean> a List<Genre>
-                val selectedGenres = Genre.entries.toTypedArray().filterIndexed { index, _ -> state.checkedGenres[index] }
-                val normalizedPhone = normalizePhone(state.phone.ifBlank { "" })
 
-                // Crea el objeto User (modelo de dominio)
-                val user = User(
-                    fullName = state.fullName.trim(),
-                    email = state.email.trim(),
-                    password = state.pass, // La contraseña se guarda en texto plano (en un app real se hashearía)
-                    phone = normalizedPhone.ifBlank { null },
-                    favoriteGenres = selectedGenres,
-                    profilePictureUri = state.profilePictureUri?.toString(),
-                    address = state.address.trim() // <-- CAMBIO: Pasa la dirección al modelo
-                )
+            // Mapea los géneros
+            val selectedGenres = Genre.entries.toTypedArray().filterIndexed { index, _ -> state.checkedGenres[index] }
+            val normalizedPhone = normalizePhone(state.phone.ifBlank { "" })
 
-                // Llama al repositorio para guardar en la BD
-                userRepository.registerUserInDb(user)
+            // Crea el objeto User (modelo de dominio)
+            val user = User(
+                fullName = state.fullName.trim(),
+                email = state.email.trim(),
+                password = state.pass, // El repositorio se encargará de esto
+                phone = normalizedPhone.ifBlank { null },
+                favoriteGenres = selectedGenres,
+                profilePictureUri = state.profilePictureUri?.toString(),
+                address = state.address.trim()
+            )
 
-                // Actualiza el estado a exitoso para disparar la navegación
+            // *** ESTA ES LA LÍNEA QUE CAMBIA ***
+            // Llama a la nueva función del repositorio
+            val result = userRepository.registerUserApi(user)
+
+            if (result.isSuccess) {
+                // Éxito
                 _uiState.update { it.copy(isRegistrationSuccess = true, submitError = null) }
+            } else {
+                // Falla (la API ya verificó si el email existía)
+                _uiState.update { it.copy(submitError = result.exceptionOrNull()?.message) }
             }
         }
     }

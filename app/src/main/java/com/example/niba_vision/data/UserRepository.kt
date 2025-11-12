@@ -1,81 +1,92 @@
 package com.example.niba_vision.data
 
+import java.io.IOException
+
 /**
- * Repositorio para gestionar los datos de los usuarios, interactuando con la base de datos a través del DAO.
+ * Repositorio que gestiona los datos del usuario, AHORA interactuando
+ * con la API remota a través de ApiService.
  *
- * Esta clase ya no es un 'object' (Singleton), ya que ahora depende de una instancia de UserDao
- * para realizar las operaciones de la base de datos.
- *
- * @property userDao El objeto de acceso a datos (DAO) para la tabla de usuarios.
+ * @property apiService El cliente de Retrofit para hacer las llamadas de red.
  */
-class UserRepository(private val userDao: UserDao) {
+class UserRepository(private val apiService: ApiService) {
 
     /**
-     * Autentica a un usuario consultando la base de datos.
-     *
-     * @param email El correo electrónico del usuario.
-     * @param password La contraseña del usuario.
-     * @return Un [Result] que contiene el objeto [User] (modelo de dominio) si las credenciales son correctas,
-     * o [Result.failure] con una excepción si son inválidas.
+     * Autentica a un usuario contra la API.
      */
     suspend fun login(email: String, password: String): Result<User> {
-        // Busca el usuario en la BD por su email
-        val userEntity = userDao.findUserByEmail(email)
+        try {
+            val loginRequest = LoginRequest(email, password)
+            val response = apiService.login(loginRequest)
 
-        // Comprueba si el usuario existe y la contraseña coincide
-        return if (userEntity != null && userEntity.password == password) {
-            // Convierte la lista de géneros (String) de nuevo a List<Genre>
-            val genres = if (userEntity.favoriteGenres.isBlank()) {
-                emptyList()
+            if (response.isSuccessful) {
+                val apiUser = response.body() ?: return Result.failure(Exception("Respuesta vacía del servidor."))
+
+                // Convertimos la respuesta de la API (UserApiResponse)
+                // a nuestro modelo de dominio de la app (User)
+                val genres = if (apiUser.favoriteGenres.isNullOrBlank()) {
+                    emptyList()
+                } else {
+                    // Convertimos "FICCION,TERROR" a List<Genre>
+                    apiUser.favoriteGenres.split(",").map { Genre.valueOf(it.trim()) }
+                }
+
+                val domainUser = User(
+                    fullName = apiUser.fullName,
+                    email = apiUser.email,
+                    password = "", // No guardamos la contraseña post-login
+                    phone = apiUser.phone,
+                    favoriteGenres = genres,
+                    profilePictureUri = apiUser.profilePictureUri,
+                    address = apiUser.address
+                )
+                return Result.success(domainUser)
             } else {
-                userEntity.favoriteGenres.split(",").map { Genre.valueOf(it) }
+                // Error de la API (ej: 401 Credenciales inválidas)
+                return Result.failure(Exception("Credenciales inválidas (Error ${response.code()})"))
             }
-            // Si es correcto, convierte la entidad de la BD (UserEntity) a tu modelo de dominio (User)
-            val user = User(
-                fullName = userEntity.fullName,
-                email = userEntity.email,
-                password = userEntity.password, // Se pasa la contraseña, pero el ViewModel debe manejarla
-                phone = userEntity.phone,
-                favoriteGenres = genres,
-                profilePictureUri = userEntity.profilePictureUri,
-                address = userEntity.address // <-- CAMBIO: Mapea la dirección
-            )
-            Result.success(user)
-        } else {
-            // Si no, devuelve un error
-            Result.failure(IllegalArgumentException("Credenciales inválidas."))
+        } catch (e: IOException) {
+            // Error de red (ej: no se puede conectar al servidor 10.0.2.2)
+            return Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: Exception) {
+            // Otro error (ej: JSON malformado, etc.)
+            return Result.failure(Exception("Error inesperado: ${e.message}"))
         }
     }
 
     /**
-     * Comprueba si un correo electrónico ya está registrado en la base de datos.
-     *
-     * @param email El correo electrónico a verificar.
-     * @return `true` si el correo ya está registrado, `false` en caso contrario.
+     * Registra un nuevo usuario en la API.
+     * Convierte el [User] (modelo de dominio) a [UserApiRequest] (DTO de red).
      */
-    suspend fun exists(email: String): Boolean {
-        // El DAO se encarga de la consulta a la BD
-        return userDao.findUserByEmail(email) != null
+    suspend fun registerUserApi(user: User): Result<Unit> {
+        try {
+            // Convertir del modelo de dominio (app) al DTO (API)
+            val apiRequest = UserApiRequest(
+                fullName = user.fullName,
+                email = user.email,
+                password = user.password,
+                phone = user.phone,
+                address = user.address,
+                profilePictureUri = user.profilePictureUri,
+                // Convertimos List<Genre> a "FICCION,TERROR"
+                favoriteGenres = user.favoriteGenres.joinToString(",") { it.name }
+            )
+
+            val response = apiService.register(apiRequest)
+
+            return if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                // Error de la API (ej: 400 Correo ya existe)
+                val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                Result.failure(Exception("Error de registro: $errorBody"))
+            }
+        } catch (e: IOException) {
+            return Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: Exception) {
+            return Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
     }
 
-    /**
-     * Registra un nuevo usuario en la base de datos.
-     * Convierte el objeto [User] (modelo de dominio) a un [UserEntity] (entidad de BD) antes de insertarlo.
-     *
-     * @param user El objeto [User] con los datos del nuevo usuario.
-     */
-    suspend fun registerUserInDb(user: User) {
-        val userEntity = UserEntity(
-            fullName = user.fullName,
-            email = user.email,
-            password = user.password,
-            phone = user.phone,
-            // Convierte la lista de géneros a un único String para poder guardarlo en la BD
-            favoriteGenres = user.favoriteGenres.joinToString(",") { it.name },
-            profilePictureUri = user.profilePictureUri,
-            address = user.address // <-- CAMBIO: Mapea la dirección
-        )
-        // Llama a la función del DAO para insertar el nuevo usuario
-        userDao.registerUser(userEntity)
-    }
+    // La función 'exists' ya no es necesaria localmente, la API se encarga
+    // de verificar duplicados durante el registro.
 }
