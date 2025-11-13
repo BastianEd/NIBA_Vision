@@ -6,24 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
-import com.example.niba_vision.data.ApiClient
 import com.example.niba_vision.data.BookRepository
 import com.example.niba_vision.data.CartRepository
-import com.example.niba_vision.data.SessionManager
 import com.example.niba_vision.data.UserRepository
 import com.example.niba_vision.ui.AppNavHost
-import com.example.niba_vision.view.theme.NIBA_VisionTheme
+import com.example.niba_vision.ui.theme.NIBA_VisionTheme
+import com.example.niba_vision.data.ApiClient
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // --- INICIALIZACIÓN DE PERSISTENCIA ---
-        // Inicializamos la sesión y el carrito para que carguen datos guardados
-        SessionManager.init(this)
-        CartRepository.init(this)
-        // --------------------------------------
-
         setContent {
             NIBA_VisionTheme {
                 App()
@@ -35,18 +27,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App() {
     val nav = rememberNavController()
+    // val context = LocalContext.current // Ya no es necesario para el UserRepository
 
-    // Obtenemos la instancia de la API
+    // --- INICIO DE CAMBIOS ---
+
+    // 1. Obtenemos la instancia de nuestro cliente de API (Retrofit)
     val apiService = ApiClient.instance
 
-    // Inyección de dependencias manual
-    val userRepository = remember { UserRepository(apiService) }
-    val bookRepository = remember { BookRepository(apiService) }
+    // 2. Creamos el UserRepository con el ApiService
+    val userRepository = remember {
+        UserRepository(apiService)
+    }
 
-    // CartRepository y SessionManager son Objects (Singletons),
-    // no necesitan instanciarse, pero los pasamos para mantener la estructura.
+    val bookRepository = remember {
+        BookRepository(apiService)
+    }
     val cartRepository = CartRepository
 
+    // Pasa todos los repositorios al NavHost (esto no cambia)
     AppNavHost(
         nav = nav,
         userRepository = userRepository,
