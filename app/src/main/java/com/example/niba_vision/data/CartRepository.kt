@@ -1,70 +1,71 @@
 package com.example.niba_vision.data
 
+import android.content.Context
+import android.content.SharedPreferences
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
-/**
- * Un repositorio singleton (object) que gestiona el estado de la cesta de compra en memoria.
- *
- * Mantiene un mapa de artículos, donde la clave es el ID del libro.
- */
 object CartRepository {
+    private const val PREF_NAME = "shopping_cart"
+    private const val KEY_CART = "cart_items"
 
-    // Un StateFlow privado que contiene el estado actual de la cesta (un mapa de ID de libro a CartItem)
-    // Se usa MutableStateFlow para poder actualizar su valor.
-    private val _items = MutableStateFlow<Map<Int, CartItem>>(emptyMap())
+    private val _cartItems = MutableStateFlow<List<CartItem>>(emptyList())
+    val cartItems: StateFlow<List<CartItem>> = _cartItems.asStateFlow()
 
-    /**
-     * Expone públicamente el contenido de la cesta como un StateFlow de solo lectura (inmutable).
-     * Las Vistas (UI) observarán este flow.
-     */
-    val cartItems: StateFlow<Map<Int, CartItem>> = _items.asStateFlow()
+    private lateinit var prefs: SharedPreferences
+    private val gson = Gson()
 
-    /**
-     * Un Flow que calcula y emite el número total de artículos en la cesta
-     * (sumando las cantidades de todos los artículos, no los tipos de libro).
-     */
-    fun getCartItemCount(): kotlinx.coroutines.flow.Flow<Int> {
-        // 'map' transforma el flujo del mapa de items en un flujo de un solo número (Int)
-        return cartItems.map { cartMap ->
-            cartMap.values.sumOf { it.quantity } // Suma la 'quantity' de cada 'CartItem'
-        }
+    // Inicializamos las preferencias (Llamar en MainActivity)
+    fun init(context: Context) {
+        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        loadCartFromPrefs()
     }
 
-    /**
-     * Añade un libro a la cesta.
-     * Si el libro ya existe, incrementa su cantidad.
-     * Si no, lo añade con cantidad 1.
-     * Esta operación es atómica gracias a 'update'.
-     */
     fun addToCart(book: Book) {
-        // 'update' garantiza que la modificación del estado sea segura en concurrencia (thread-safe)
-        _items.update { currentCart ->
-            // Se crea una copia mutable del mapa actual
-            val cart = currentCart.toMutableMap()
-            // Se busca si el item ya existe usando el ID del libro como clave
-            val currentItem = cart[book.id]
-
-            if (currentItem == null) {
-                // Si no existe, se añade un nuevo 'CartItem' con cantidad 1
-                cart[book.id] = CartItem(book = book, quantity = 1)
+        _cartItems.update { currentItems ->
+            val existingItem = currentItems.find { it.book.id == book.id }
+            if (existingItem != null) {
+                currentItems.map {
+                    if (it.book.id == book.id) it.copy(quantity = it.quantity + 1) else it
+                }
             } else {
-                // Si ya existe, se crea una copia del item con la cantidad incrementada
-                cart[book.id] = currentItem.copy(quantity = currentItem.quantity + 1)
+                currentItems + CartItem(book, 1)
             }
-            cart // Devuelve el mapa actualizado, que se convertirá en el nuevo estado de '_items'
         }
+        saveCartToPrefs()
     }
 
-    /**
-     * Limpia la cesta de compra (después de un pago exitoso).
-     * Reemplaza el mapa actual por un mapa vacío.
-     * ESTA ES LA FUNCIÓN QUE FALTABA.
-     */
+    fun removeFromCart(book: Book) {
+        _cartItems.update { currentItems ->
+            currentItems.filter { it.book.id != book.id }
+        }
+        saveCartToPrefs()
+    }
+
     fun clearCart() {
-        _items.update { emptyMap() }
+        _cartItems.value = emptyList()
+        saveCartToPrefs()
+    }
+
+    private fun saveCartToPrefs() {
+        val json = gson.toJson(_cartItems.value)
+        prefs.edit().putString(KEY_CART, json).apply()
+    }
+
+    private fun loadCartFromPrefs() {
+        val json = prefs.getString(KEY_CART, null)
+        if (json != null) {
+            try {
+                val type = object : TypeToken<List<CartItem>>() {}.type
+                val items: List<CartItem> = gson.fromJson(json, type)
+                _cartItems.value = items
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
