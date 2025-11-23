@@ -30,7 +30,7 @@ class AppViewModelFactory(
         if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             // --- CAMBIO AQUÍ ---
-            return ProfileViewModel() as T // Ya no pasamos el userRepository
+            return ProfileViewModel(userRepository) as T // Ya no pasamos el userRepository
         }
 
         throw IllegalArgumentException("Unknown ViewModel class")

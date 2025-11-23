@@ -1,6 +1,10 @@
 package com.example.niba_vision.ui.screens.home
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable // 👈 Importante para detectar el toque
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,14 +16,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState // Para desplazamiento vertical
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll // Para desplazamiento vertical
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange // Icono de fecha
-import androidx.compose.material.icons.filled.Edit // Icono de editar
-import androidx.compose.material.icons.filled.Home // Icono de casa
-import androidx.compose.material.icons.filled.Schedule // Icono de reloj
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,14 +38,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector // Para los iconos
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.niba_vision.R // Para el 'drawable' de placeholder
+import com.example.niba_vision.R
 import com.example.niba_vision.viewmodel.AppViewModelFactory
 import com.example.niba_vision.viewmodel.ProfileViewModel
 
@@ -58,46 +63,81 @@ fun ProfileScreen(
     // Observa el estado del perfil
     val uiState by viewModel.uiState.collectAsState()
 
+    // Obtenemos el contexto actual (necesario para procesar la imagen)
+    val context = LocalContext.current
+
+    // 👇 Configuración del lanzador de Galería (Photo Picker)
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            // Si el usuario eligió una foto (uri no es null)
+            if (uri != null) {
+                // Aquí llamamos a la función del ViewModel que estaba "sin usar"
+                viewModel.changeProfilePicture(uri, context)
+            }
+        }
+    )
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         if (uiState.isLoading) {
-            // Muestra un indicador de carga mientras se obtiene el usuario desde SessionManager
             CircularProgressIndicator()
         } else if (uiState.currentUser == null) {
-            // Muestra un error si no se pudo cargar el usuario
             Text("No se pudo cargar el perfil del usuario.")
         } else {
-            // Si el usuario se cargó correctamente, se muestra el perfil
             val user = uiState.currentUser!!
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()) // Permite desplazar si el contenido es largo
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top // Alinea el contenido principal arriba
+                verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(32.dp)) // Espacio superior
+                Spacer(modifier = Modifier.height(32.dp))
 
-                // FOTO DE PERFIL
+                // --- FOTO DE PERFIL ---
                 Box(
                     modifier = Modifier
                         .size(150.dp)
                         .clip(CircleShape)
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                        // 👇 AQUÍ ESTÁ LA CLAVE: Hacemos que al tocar la caja, se abra la galería
+                        .clickable {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
                 ) {
                     AsyncImage(
                         model = user.profilePictureUri, // URI de la foto
                         contentDescription = "Foto de perfil",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                        // Imágenes de fallback en caso de error o carga
                         error = painterResource(id = R.drawable.ic_launcher_foreground),
                         placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
                     )
+
+                    // Icono superpuesto para indicar que es editable
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Cambiar foto",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                            .size(24.dp)
+                    )
                 }
+
+                Text(
+                    text = "Toca la foto para cambiarla",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -116,7 +156,7 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // --- CAMBIO: INFORMACIÓN DE DESPACHO ---
+                // --- INFORMACIÓN DE DESPACHO ---
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(2.dp),
@@ -130,38 +170,32 @@ fun ProfileScreen(
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        // Fila para la Dirección (Dato Real)
                         InfoRow(
                             icon = Icons.Default.Home,
                             label = "Dirección",
-                            // Muestra la dirección guardada o "No especificada"
                             value = user.address ?: "No especificada"
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Fila para la Fecha (Dato Ficticio)
                         InfoRow(
                             icon = Icons.Default.DateRange,
                             label = "Próximo despacho",
-                            value = "Viernes, 31 de Octubre" // Dato ficticio
+                            value = "Viernes, 31 de Octubre"
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Fila para el Horario (Dato Ficticio)
                         InfoRow(
                             icon = Icons.Default.Schedule,
                             label = "Horario programado",
-                            value = "14:00 - 18:00 hrs" // Dato ficticio
+                            value = "14:00 - 18:00 hrs"
                         )
                     }
                 }
-                // ----------------------------------------
 
-                // Spacer con 'weight' empuja el botón de logout al fondo de la pantalla
                 Spacer(modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.height(32.dp)) // Espacio mínimo antes del botón
+                Spacer(modifier = Modifier.height(32.dp))
 
                 // BOTÓN PARA CERRAR SESIÓN
                 Button(
@@ -175,17 +209,12 @@ fun ProfileScreen(
     }
 }
 
-/**
- * Composable de ayuda reutilizable para mostrar una fila de información
- * (Icono, Etiqueta, Valor) dentro del perfil.
- */
 @Composable
 private fun InfoRow(icon: ImageVector, label: String, value: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // 1. Icono
         Icon(
             imageVector = icon,
             contentDescription = label,
@@ -194,17 +223,14 @@ private fun InfoRow(icon: ImageVector, label: String, value: String) {
         )
         Spacer(modifier = Modifier.width(16.dp))
 
-        // 2. Columna de texto (Etiqueta y Valor)
         Column {
             Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
         }
 
-        // 3. Spacer flexible que empuja el icono de editar al final
         Spacer(modifier = Modifier.weight(1f))
 
-        // 4. Icono de "editar" (decorativo/ficticio)
-        IconButton(onClick = { /* Acción de editar (ficticia) */ }) {
+        IconButton(onClick = { /* Acción decorativa */ }) {
             Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

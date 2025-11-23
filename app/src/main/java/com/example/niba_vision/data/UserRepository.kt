@@ -1,5 +1,4 @@
 package com.example.niba_vision.data
-
 /**
  * Repositorio para gestionar los datos de los usuarios, interactuando con la base de datos a través del DAO.
  *
@@ -77,5 +76,45 @@ class UserRepository(private val userDao: UserDao) {
         )
         // Llama a la función del DAO para insertar el nuevo usuario
         userDao.registerUser(userEntity)
+    }
+
+    /**
+     * Actualiza la foto de perfil del usuario en la base de datos.
+     * Se usa para guardar la URI de la imagen seleccionada con el Photo Picker.
+     *
+     * @param email El correo del usuario a actualizar.
+     * @param newUri La nueva URI (ruta) de la imagen como String.
+     * @return El objeto [User] actualizado o null si no se encontró.
+     */
+    suspend fun updateProfilePicture(email: String, newUri: String): User? {
+        // 1. Buscamos el usuario actual en la BD
+        val userEntity = userDao.findUserByEmail(email)
+
+        if (userEntity != null) {
+            // 2. Creamos una copia de la entidad con la nueva URI de la foto
+            val updatedEntity = userEntity.copy(profilePictureUri = newUri)
+
+            // 3. Actualizamos el registro en la BD
+            // ¡IMPORTANTE!: Asegúrate de haber agregado @Update en UserDao
+            userDao.updateUser(updatedEntity)
+
+            // 4. Convertimos la entidad actualizada de vuelta al modelo de dominio User
+            val genres = if (updatedEntity.favoriteGenres.isBlank()) {
+                emptyList()
+            } else {
+                updatedEntity.favoriteGenres.split(",").map { Genre.valueOf(it) }
+            }
+
+            return User(
+                fullName = updatedEntity.fullName,
+                email = updatedEntity.email,
+                password = updatedEntity.password,
+                phone = updatedEntity.phone,
+                favoriteGenres = genres,
+                profilePictureUri = updatedEntity.profilePictureUri,
+                address = updatedEntity.address
+            )
+        }
+        return null
     }
 }
