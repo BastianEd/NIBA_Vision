@@ -87,6 +87,51 @@ class UserRepository(private val apiService: ApiService) {
         }
     }
 
-    // La función 'exists' ya no es necesaria localmente, la API se encarga
-    // de verificar duplicados durante el registro.
+    /**
+     * Actualiza los datos del usuario en la API.
+     */
+    suspend fun updateUser(user: User): Result<User> {
+        try {
+            // 1. Convertimos el modelo de dominio (User) al DTO de la API (UserApiRequest)
+            val apiRequest = UserApiRequest(
+                fullName = user.fullName,
+                email = user.email,
+                password = user.password, // Ojo: La API podría pedir la pass para confirmar cambios
+                phone = user.phone,
+                address = user.address,
+                profilePictureUri = user.profilePictureUri,
+                favoriteGenres = user.favoriteGenres.joinToString(",") { it.name }
+            )
+
+            // 2. Llamamos a la API
+            val response = apiService.updateUser(apiRequest)
+
+            if (response.isSuccessful) {
+                val apiUser = response.body() ?: return Result.failure(Exception("Respuesta vacía al actualizar."))
+
+                // 3. Convertimos la respuesta de vuelta a User
+                val genres = if (apiUser.favoriteGenres.isNullOrBlank()) {
+                    emptyList()
+                } else {
+                    apiUser.favoriteGenres.split(",").map { Genre.valueOf(it.trim()) }
+                }
+
+                val updatedUser = User(
+                    fullName = apiUser.fullName,
+                    email = apiUser.email,
+                    password = user.password, // Mantenemos la pass local si la API no la devuelve
+                    phone = apiUser.phone,
+                    favoriteGenres = genres,
+                    profilePictureUri = apiUser.profilePictureUri,
+                    address = apiUser.address
+                )
+                return Result.success(updatedUser)
+            } else {
+                val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                return Result.failure(Exception("Error al actualizar: $errorBody"))
+            }
+        } catch (e: Exception) {
+            return Result.failure(Exception("Error de conexión: ${e.message}"))
+        }
+    }
 }

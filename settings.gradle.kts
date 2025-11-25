@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NIBA_Vision"
+rootProject.name = "NIBA Vision - API Conexion"
 include(":app")

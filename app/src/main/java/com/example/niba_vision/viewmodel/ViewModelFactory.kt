@@ -4,13 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.niba_vision.data.BookRepository
 import com.example.niba_vision.data.CartRepository
+import com.example.niba_vision.data.SessionManager
 import com.example.niba_vision.data.UserRepository
-
 
 class AppViewModelFactory(
     private val userRepository: UserRepository,
     private val bookRepository: BookRepository,
-    private val cartRepository: CartRepository // <-- AÑADIDO
+    private val cartRepository: CartRepository
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -24,13 +24,12 @@ class AppViewModelFactory(
         }
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            // Inyecta ambos repositorios en HomeViewModel
-            return HomeViewModel(bookRepository, cartRepository) as T // <-- MODIFICADO
+            return HomeViewModel(bookRepository, cartRepository) as T
         }
         if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            // --- CAMBIO AQUÍ ---
-            return ProfileViewModel() as T // Ya no pasamos el userRepository
+            // CORRECCIÓN: Pasamos userRepository y el objeto singleton SessionManager
+            return ProfileViewModel(userRepository, SessionManager) as T
         }
 
         throw IllegalArgumentException("Unknown ViewModel class")

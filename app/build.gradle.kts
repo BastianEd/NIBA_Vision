@@ -16,7 +16,7 @@ android {
         minSdk = 28 // La versión mínima de Android requerida para ejecutar la app.
         targetSdk = 36 // La versión de Android para la que la app fue probada.
         versionCode = 1
-        versionName = "1.0"
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -106,4 +106,7 @@ dependencies {
 
     // Coroutines (Para manejar operaciones de red en segundo plano)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+
+    //Coli
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

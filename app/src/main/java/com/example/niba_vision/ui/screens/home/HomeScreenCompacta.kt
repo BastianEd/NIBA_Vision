@@ -33,7 +33,7 @@ fun HomeScreenCompacta(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "ZONALIBROS") }
+                title = { Text(text = "ZONA LIBROS") }
             )
         },
         bottomBar = {

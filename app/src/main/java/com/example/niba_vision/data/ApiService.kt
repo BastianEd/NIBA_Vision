@@ -6,11 +6,15 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.GET
+import retrofit2.http.PUT
 
 // IMPORTANTE:
 // Usa "10.0.2.2" para conectar al "localhost" de tu computadora
 // desde el emulador de Android.
-private const val BASE_URL = "http://192.168.1.124:8080/"
+
+    //Si estas en Windows recordar habilitar el firewall para que acepte conexiones entrantes en el puerto 8080
+    //Remplazar la IP por la IP local de tu computadora
+private const val BASE_URL = "http:192.168.1.22:8080/"
 
 // Creamos el cliente de Retrofit
 object ApiClient {
@@ -37,4 +41,10 @@ interface ApiService {
     // Devuelve una Lista de tu modelo de datos Book
     @GET("api/books")
     suspend fun getBooks(): List<Book>
+
+    // Agrega esto junto a tus otros métodos (@POST login, @POST register, etc.)
+    // Asumimos que el backend acepta una petición PUT a "user" o "update" con los datos nuevos.
+    // Ajusta la ruta ("user/update" o la que use tu API real) según corresponda.
+    @PUT("user/update")
+    suspend fun updateUser(@Body request: UserApiRequest): Response<UserApiResponse>
 }
